@@ -1,0 +1,102 @@
+{
+    "common": {
+        "name": "hass-mqtt",
+        "version": "0.0.1",
+        "news": {
+            "0.0.1": {
+                "en": "initial release",
+                "de": "Erstveröffentlichung",
+                "ru": "Начальная версия",
+                "pt": "lançamento inicial",
+                "nl": "Eerste uitgave",
+                "fr": "Première version",
+                "it": "Versione iniziale",
+                "es": "Versión inicial",
+                "pl": "Pierwsze wydanie",
+                "zh-cn": "首次出版"
+            }
+        },
+        "title": "hass-mqtt",
+        "titleLang": {
+            "en": "hass-mqtt",
+            "de": "hass-mqtt",
+            "ru": "Хасс-MQTT",
+            "pt": "hass-mqtt",
+            "nl": "hass-mqtt",
+            "fr": "hass-mqtt",
+            "it": "Hass-MQTT",
+            "es": "hass-mqtt",
+            "pl": "hass-mqtt",
+            "zh-cn": "HASS-MQTT"
+        },
+        "desc": {
+            "en": "This adapter can discover devices followed hass mqtt discover protocol",
+            "de": "Dieser Adapter kann Geräte erkennen, denen das Protokoll mqtt discover folgt",
+            "ru": "Этот адаптер может обнаруживать устройства в соответствии с протоколом hass mqtt Discover",
+            "pt": "Este adaptador pode descobrir dispositivos seguidos pelo método hass mqtt discover",
+            "nl": "Deze adapter kan zoeken naar apparaten gevolgd hass mqtt discover-protocol",
+            "fr": "Cet adaptateur peut détecter les périphériques suivis par le protocole de découverte hass mqtt",
+            "it": "Questo adattatore può scoprire i dispositivi seguiti dal protocollo di rilevamento mqtt di hass",
+            "es": "Este adaptador puede descubrir dispositivos seguidos hass mqtt descubrir protocolo",
+            "pl": "Ten adapter może wykrywać urządzenia po protokole wykrywania hass mqtt",
+            "zh-cn": "该适配器可以发现遵循hass mqtt discover协议的设备"
+        },
+        "authors": [
+            "SchumyHao <schumyhaojl@126.com>"
+        ],
+        "keywords": [
+            "mqtt",
+            "hass",
+            "homeassistant",
+            "discover"
+        ],
+        "license": "MIT",
+        "platform": "Javascript/Node.js",
+        "main": "build/main.js",
+        "icon": "hass-mqtt.png",
+        "enabled": true,
+        "extIcon": "https://raw.githubusercontent.com/smarthomefans/ioBroker.hass-mqtt/master/admin/hass-mqtt.png",
+        "readme": "https://github.com/smarthomefans/ioBroker.hass-mqtt/blob/master/README.md",
+        "loglevel": "info",
+        "mode": "daemon",
+        "type": "iot-systems",
+        "compact": true,
+        "materialize": true,
+        "dependencies": [
+            {
+                "admin": ">=3.0.0"
+            },
+            {
+                "js-controller": ">=1.4.2"
+            }
+        ]
+    },
+    "native": {
+        "option1": true,
+        "option2": "42"
+    },
+    "objects": [],
+    "instanceObjects": [
+        {
+            "_id": "info",
+            "type": "channel",
+            "common": {
+                "name": "Information"
+            },
+            "native": {}
+        },
+        {
+            "_id": "info.connection",
+            "type": "state",
+            "common": {
+                "role": "indicator.connected",
+                "name": "Device or service connected",
+                "type": "boolean",
+                "read": true,
+                "write": false,
+                "def": false
+            },
+            "native": {}
+        }
+    ]
+}
