@@ -76,7 +76,9 @@
     },
     "native": {
         "option1": true,
-        "option2": "42"
+        "option2": "42",
+        "mqttClientInstantID": "",
+        "hassPrefix": "homeassistant"
     },
     "objects": [],
     "instanceObjects": [
