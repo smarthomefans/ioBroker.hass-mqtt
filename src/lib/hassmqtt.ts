@@ -10,46 +10,49 @@ const supportedDomain: Record<string, any> = {
 //    "light",
 //    "lock": null,
 //    "sensor": null,
-    "switch": HaSwitch,
+    switch: HaSwitch,
 //    "vacuum",
 };
 
-export type hassState = string | boolean | number
+export type hassState = string | boolean | number;
 
-export type hassAttr = string | boolean | number
+export type hassAttr = string | boolean | number;
 
-export interface hassDevice {
+export interface HassDevice {
     domain: string;
     entityID: string;
+    friendlyName: string;
     nodeID?: string;
     state?: hassState;
     attrs?: Record<string, hassAttr>;
-    //TODO: fix any
+    // TODO: fix any
     instant: any;
 }
 
-export function deleteDevice(id: string, callback?: (dev: hassDevice) => void) {
+export function deleteDevice(id: string, callback?: (dev: HassDevice) => void) {
 
 }
 
-export function addDevice(id: string, val: string, callback: (dev: hassDevice) => void) {
-    const configReg = new RegExp(`(\w*\.)+config`);
-    const match = configReg.exec(id);
-    let dev: hassDevice = {
+export function addDevice(id: string, val: string, callback: (dev: HassDevice) => void) {
+    const match = id.split(".");
+    const dev: HassDevice = {
         domain: "",
         entityID: "",
-        instant: undefined
+        friendlyName: "",
+        instant: undefined,
     };
-    if (!match || match.length > 3) {
+    if (!match || match.length > 4) {
         return;
     }
-    if (match.length === 3) {
+    if (match.length === 4) {
         dev.domain = match[0];
         dev.nodeID = match[1];
         dev.entityID = match[2];
-    } else if (match.length === 2) {
+        dev.friendlyName = match[2];
+    } else if (match.length === 3) {
         dev.domain = match[0];
         dev.entityID = match[1];
+        dev.friendlyName = match[1];
     }
 
     if (!supportedDomain[dev.domain]) {
@@ -57,6 +60,9 @@ export function addDevice(id: string, val: string, callback: (dev: hassDevice) =
         return;
     }
     dev.instant = new supportedDomain[dev.domain](val);
+    if (dev.instant.name) {
+        dev.friendlyName = dev.instant.name;
+    }
     callback(dev);
 }
 

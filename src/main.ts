@@ -38,7 +38,7 @@ class HassMqtt extends utils.Adapter {
         this.on("unload", this.onUnload.bind(this));
     }
 
-    private mqttId2device: Record<string, haMqtt.hassDevice> = {}
+    private mqttId2device: Record<string, haMqtt.HassDevice> = {};
 
     /**
      * Is called when databases are connected and adapter received configuration.
@@ -50,7 +50,7 @@ class HassMqtt extends utils.Adapter {
         this.setState("info.connection", false, true);
         if (this.config.mqttClientInstantID === "") {
             this.log.error("Must create and locate a mqtt client instant first.")
-            return
+            return;
         }
         if (this.config.hassPrefix === "") {
             this.log.warn("Homeassistant mqtt prefix not set. Use default prefix.");
@@ -70,16 +70,28 @@ class HassMqtt extends utils.Adapter {
         this.getForeignState(`${this.config.mqttClientInstantID}.info.connection`, (err, state) => {
             if (err) {
                 this.log.info(`Get mqtt connection failed. ${err}`);
-                return
+                return;
             }
             if (!state) {
                 this.log.info(`mqtt connection state is not exist, wait mqtt ready`);
-                return
+                return;
             }
             if (state.val) {
                 this.setState("info.connection", true, true);
             } else {
                 this.setState("info.connection", false, true);
+            }
+        });
+        this.getForeignStates(`${this.config.mqttClientInstantID}.${this.config.hassPrefix}.*`, (err, states) => {
+            if (err) {
+                this.log.info(`Mqtt client dose not exist homeassistant like topics.`);
+                return;
+            }
+            for (const s in states) {
+                if (states.hasOwnProperty(s)) {
+                    this.log.debug(`Read state in ready. id=${s}`);
+                    this.handleHassMqttStates(s, states[s]);
+                }
             }
         });
     }
@@ -133,35 +145,9 @@ class HassMqtt extends utils.Adapter {
                     this.setState("info.connection", false, true);
                 }
             } else if (id.indexOf(`${this.config.mqttClientInstantID}.${this.config.hassPrefix}`) === 0) {
-                // handle hass mqtt
-                id = id.substring(`${this.config.mqttClientInstantID}.${this.config.hassPrefix}.`.length);
-                if (this.isConfigMqttId(id)) {
-                    if (this.mqttId2device[id] === undefined) {
-                        haMqtt.addDevice(id, state.val, (hassDev) => {
-                            //TODO: init channel and states based on hassDev
-                            const states = hassDev.instant.getIobStates();
-                            if (typeof states === "undefined") {
-                                this.log.warn(`${id} can not get ioBroker states.`);
-                                return;
-                            }
-                            for (const state in states) {
-                                this.setObject(`${this.config.hassPrefix}.${hassDev.domain}.${hassDev.entityID}.${state}`, states[state], true);
-                            }
-                            this.mqttId2device[id] = hassDev;
-                        })
-                    } else {
-                        // registered device change mqtt
-                    }
-                } else if (this.isStateMqttId(id)) {
-                    haMqtt.stateChange(id, state.val, (state) => {
-                        //update iobroker state.
-                    })
-                } else {
-                    // Attribute Mqtt Id
-                    haMqtt.attributeChange(id, state.val, (attr) => {
-                        //update iobroker state.
-                    })
-                }
+                this.handleHassMqttStates(id, state);
+            } else if (this.mqttId2device[id]) {
+                this.handleCustomMqttStates(id, state);
             } else {
                 // self state change
             }
@@ -178,6 +164,71 @@ class HassMqtt extends utils.Adapter {
         }
     }
 
+    private handleHassMqttStates(id: string, state: ioBroker.State) {
+        // handle hass mqtt
+        if (id.indexOf(`${this.config.mqttClientInstantID}.${this.config.hassPrefix}`) === 0) {
+            id = id.substring(`${this.config.mqttClientInstantID}.${this.config.hassPrefix}.`.length);
+        }
+        if (this.isConfigMqttId(id)) {
+            if (this.mqttId2device[id] === undefined) {
+                haMqtt.addDevice(id, state.val, (hassDev) => {
+                    // TODO: init channel and states based on hassDev
+                    const states = hassDev.instant.getIobStates();
+                    if (typeof states === "undefined") {
+                        this.log.warn(`${id} can not get ioBroker states.`);
+                        return;
+                    }
+                    for (const s in states) {
+                        if (states.hasOwnProperty(s)) {
+                            this.setObject(`${this.config.hassPrefix}.${hassDev.domain}.${hassDev.entityID}.${s}`, states[s], true);
+                            if (states[s].native && states[s].native.topic) {
+                                const ct = `${this.config.mqttClientInstantID}.${states[s].native.topic.replace(/\//g, ".")}`;
+                                this.mqttId2device[ct] = hassDev;
+                                this.subscribeForeignStates(ct);
+                                this.getForeignState(ct, (err, cs) => {
+                                    if (err) {
+                                        this.log.info(`Read Custom topic(${ct}) failed: ${err}.`);
+                                        return;
+                                    }
+                                    if (!cs) {
+                                        this.log.info(`Custom topic(${ct}) not ready yet.`);
+                                        return;
+                                    }
+                                    this.handleCustomMqttStates(ct, cs);
+                                });
+                            }
+                        }
+                    }
+                    this.setState(`${this.config.hassPrefix}.${hassDev.domain}.${hassDev.entityID}.name`, hassDev.friendlyName, true);
+                    this.mqttId2device[id] = hassDev;
+                });
+            } else {
+                // registered device change mqtt
+            }
+        } else if (this.isStateMqttId(id)) {
+            haMqtt.stateChange(id, state.val, (state) => {
+                // update iobroker state.
+            });
+        } else {
+            // Attribute Mqtt Id
+            haMqtt.attributeChange(id, state.val, (attr) => {
+                // update iobroker state.
+            });
+        }
+    }
+
+    private handleCustomMqttStates(id: string, state: ioBroker.State) {
+        const hassDev = this.mqttId2device[id];
+        if (typeof hassDev === "undefined") {
+            this.log.warn(`Custom MQTT id (${id}) doesn't connect to device.`);
+            return;
+        }
+        if (id.indexOf(`${this.config.mqttClientInstantID}`) === 0) {
+            id = id.substring(`${this.config.mqttClientInstantID}.`.length);
+        }
+        this.log.debug(`handle custom mqtt topic ${id}`);
+        hassDev.instant.stateChange(id, state.val);
+    }
     // /**
     //  * Some message was sent to this instance over message box. Used by email, pushover, text2speech, ...
     //  * Using this method requires "common.message" property to be set to true in io-package.json
