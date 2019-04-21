@@ -38,7 +38,7 @@ class HassMqtt extends utils.Adapter {
         this.on("unload", this.onUnload.bind(this));
     }
 
-    private mqttId2device: Record<string, haMqtt.hassDevice>
+    private mqttId2device: Record<string, haMqtt.hassDevice> = {}
 
     /**
      * Is called when databases are connected and adapter received configuration.
@@ -109,6 +109,16 @@ class HassMqtt extends utils.Adapter {
         }
     }
 
+    private configReg = new RegExp(`(\w*\.)+config`);
+    private isConfigMqttId(id: string) {
+        return this.configReg.test(id);
+    }
+
+    private stateReg = new RegExp(`(\w*\.)+state`);
+    private isStateMqttId(id: string) {
+        return this.stateReg.test(id);
+    }
+
     /**
      * Is called if a subscribed state changes
      */
@@ -124,13 +134,33 @@ class HassMqtt extends utils.Adapter {
                 }
             } else if (id.indexOf(`${this.config.mqttClientInstantID}.${this.config.hassPrefix}`) === 0) {
                 // handle hass mqtt
-                if (this.mqttId2device[id] === undefined) {
-                    haMqtt.addDevice(id, (hassDev) => {
-                        //TODO: init channel and states based on hassDev
-                        this.mqttId2device[id] = hassDev;
+                id = id.substring(`${this.config.mqttClientInstantID}.${this.config.hassPrefix}.`.length);
+                if (this.isConfigMqttId(id)) {
+                    if (this.mqttId2device[id] === undefined) {
+                        haMqtt.addDevice(id, state.val, (hassDev) => {
+                            //TODO: init channel and states based on hassDev
+                            const states = hassDev.instant.getIobStates();
+                            if (typeof states === "undefined") {
+                                this.log.warn(`${id} can not get ioBroker states.`);
+                                return;
+                            }
+                            for (const state in states) {
+                                this.setObject(`${this.config.hassPrefix}.${hassDev.domain}.${hassDev.entityID}.${state}`, states[state], true);
+                            }
+                            this.mqttId2device[id] = hassDev;
+                        })
+                    } else {
+                        // registered device change mqtt
+                    }
+                } else if (this.isStateMqttId(id)) {
+                    haMqtt.stateChange(id, state.val, (state) => {
+                        //update iobroker state.
                     })
                 } else {
-                    // registered device change mqtt
+                    // Attribute Mqtt Id
+                    haMqtt.attributeChange(id, state.val, (attr) => {
+                        //update iobroker state.
+                    })
                 }
             } else {
                 // self state change

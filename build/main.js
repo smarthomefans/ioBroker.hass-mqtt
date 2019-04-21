@@ -14,9 +14,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 // The adapter-core module gives you access to the core ioBroker functions
 // you need to create an adapter
 const utils = require("@iobroker/adapter-core");
+const haMqtt = require("./lib/hassmqtt");
 class HassMqtt extends utils.Adapter {
     constructor(options = {}) {
         super(Object.assign({}, options, { name: "hass-mqtt" }));
+        this.mqttId2device = {};
+        this.configReg = new RegExp(`(\w*\.)+config`);
+        this.stateReg = new RegExp(`(\w*\.)+state`);
         this.on("ready", this.onReady.bind(this));
         this.on("objectChange", this.onObjectChange.bind(this));
         this.on("stateChange", this.onStateChange.bind(this));
@@ -41,46 +45,12 @@ class HassMqtt extends utils.Adapter {
             }
             // The adapters config (in the instance object everything under the attribute "native") is accessible via
             // this.config:
-            this.log.info("config option1: " + this.config.option1);
-            this.log.info("config option2: " + this.config.option2);
             this.log.info("config mqtt client instant: " + this.config.mqttClientInstantID);
             this.log.info("config homeassistant prefix: " + this.config.hassPrefix);
-            /*
-            For every state in the system there has to be also an object of type state
-            Here a simple template for a boolean variable named "testVariable"
-            Because every adapter instance uses its own unique namespace variable names can't collide with other adapters variables
-            */
-            yield this.setObjectAsync("testVariable", {
-                type: "state",
-                common: {
-                    name: "testVariable",
-                    type: "boolean",
-                    role: "indicator",
-                    read: true,
-                    write: true,
-                },
-                native: {},
-            });
             // in this template all states changes inside the adapters namespace are subscribed
             this.subscribeStates("*");
             this.subscribeForeignStates(`${this.config.mqttClientInstantID}.${this.config.hassPrefix}.*`);
             this.subscribeForeignStates(`${this.config.mqttClientInstantID}.info.connection`);
-            /*
-            setState examples
-            you will notice that each setState will cause the stateChange event to fire (because of above subscribeStates cmd)
-            */
-            // the variable testVariable is set to true as command (ack=false)
-            yield this.setStateAsync("testVariable", true);
-            // same thing, but the value is flagged "ack"
-            // ack should be always set to true if the value is received from or acknowledged from the target system
-            yield this.setStateAsync("testVariable", { val: true, ack: true });
-            // same thing, but the state is deleted after 30s (getState will return null afterwards)
-            yield this.setStateAsync("testVariable", { val: true, ack: true, expire: 30 });
-            // examples for the checkPassword/checkGroup functions
-            let result = yield this.checkPasswordAsync("admin", "iobroker");
-            this.log.info("check user admin pw ioboker: " + result);
-            result = yield this.checkGroupAsync("admin", "admin");
-            this.log.info("check group user admin group admin: " + result);
             this.getForeignState(`${this.config.mqttClientInstantID}.info.connection`, (err, state) => {
                 if (err) {
                     this.log.info(`Get mqtt connection failed. ${err}`);
@@ -124,6 +94,12 @@ class HassMqtt extends utils.Adapter {
             this.log.info(`object ${id} deleted`);
         }
     }
+    isConfigMqttId(id) {
+        return this.configReg.test(id);
+    }
+    isStateMqttId(id) {
+        return this.stateReg.test(id);
+    }
     /**
      * Is called if a subscribed state changes
      */
@@ -139,10 +115,56 @@ class HassMqtt extends utils.Adapter {
                     this.setState("info.connection", false, true);
                 }
             }
+            else if (id.indexOf(`${this.config.mqttClientInstantID}.${this.config.hassPrefix}`) === 0) {
+                // handle hass mqtt
+                id = id.substring(`${this.config.mqttClientInstantID}.${this.config.hassPrefix}.`.length);
+                if (this.isConfigMqttId(id)) {
+                    if (this.mqttId2device[id] === undefined) {
+                        haMqtt.addDevice(id, state.val, (hassDev) => {
+                            //TODO: init channel and states based on hassDev
+                            const states = hassDev.instant.getIobStates();
+                            if (typeof states === "undefined") {
+                                this.log.warn(`${id} can not get ioBroker states.`);
+                                return;
+                            }
+                            for (const state in states) {
+                                this.setObject(`${this.config.hassPrefix}.${hassDev.domain}.${hassDev.entityID}.${state}`, states[state], true);
+                            }
+                            this.mqttId2device[id] = hassDev;
+                        });
+                    }
+                    else {
+                        // registered device change mqtt
+                    }
+                }
+                else if (this.isStateMqttId(id)) {
+                    haMqtt.stateChange(id, state.val, (state) => {
+                        //update iobroker state.
+                    });
+                }
+                else {
+                    // Attribute Mqtt Id
+                    haMqtt.attributeChange(id, state.val, (attr) => {
+                        //update iobroker state.
+                    });
+                }
+            }
+            else {
+                // self state change
+            }
         }
         else {
             // The state was deleted
             this.log.info(`state ${id} deleted`);
+            if (id === `${this.config.mqttClientInstantID}.info.connection`) {
+                this.setState("info.connection", false, true);
+            }
+            else if (id.indexOf(`${this.config.mqttClientInstantID}.${this.config.hassPrefix}`) === 0) {
+                haMqtt.deleteDevice(id);
+            }
+            else {
+                // self state change
+            }
         }
     }
 }
