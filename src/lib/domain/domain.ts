@@ -183,8 +183,16 @@ export class Domain {
         return undefined;
     }
 
-    public stateChange(id: string, val: any) {
+    public mqttStateChange(state: string, val: any) {
         return;
+    }
+
+    public idToState(id: string): string | undefined {
+        return undefined;
+    }
+
+    public iobStateVal(state: string): any | undefined {
+        return undefined;
     }
 /**
  * device

@@ -17,17 +17,18 @@ class HaSwitch extends domain_1.Domain {
         this.commandTopic = this.getConfigString("command_topic");
         this.payloadOn = this.getConfigString("payload_on") || "ON";
         this.payloadOff = this.getConfigString("payload_off") || "OFF";
+        this.commandTopicValue = this.payloadOff;
         this.stateTopic = this.getConfigString("state_topic");
         this.stateOn = this.getConfigString("state_on") || "ON";
         this.stateOff = this.getConfigString("state_off") || "OFF";
+        this.stateTopicValue = this.stateOff;
         this.availabilityTopic = this.getConfigString("availability_topic");
         if (this.availabilityTopic !== "") {
             this.payloadAvailable = this.getConfigString("payload_available") || "online";
             this.payloadNotAvailable = this.getConfigString("payload_not_available") || "offline";
+            this.availabilityTopicValue = this.payloadAvailable;
         }
-    }
-    getIobStates() {
-        return {
+        this.iobStates = {
             name: {
                 type: "state",
                 common: {
@@ -69,6 +70,42 @@ class HaSwitch extends domain_1.Domain {
                 },
             },
         };
+    }
+    getIobStates() {
+        return this.iobStates;
+    }
+    idToState(id) {
+        for (const s in this.iobStates) {
+            if (this.iobStates.hasOwnProperty(s)) {
+                const st = this.iobStates[s];
+                if (st.native && st.native.topic && st.native.topic.replace(/\//g, ".") === id) {
+                    return s;
+                }
+            }
+        }
+        return undefined;
+    }
+    mqttStateChange(state, val) {
+        if (state === "command") {
+            if (typeof val === "string") {
+                this.commandTopicValue = val;
+            }
+        }
+        else if (state === "state") {
+            if (typeof val === "string") {
+                this.stateTopicValue = val;
+            }
+        }
+        return;
+    }
+    iobStateVal(state) {
+        if (state === "command") {
+            return this.commandTopicValue === this.payloadOn;
+        }
+        else if (state === "state") {
+            return this.stateTopicValue === this.stateOn;
+        }
+        return undefined;
     }
 }
 exports.HaSwitch = HaSwitch;

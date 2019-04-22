@@ -45,8 +45,14 @@ class Domain {
     getIobStates() {
         return undefined;
     }
-    stateChange(id, val) {
+    mqttStateChange(state, val) {
         return;
+    }
+    idToState(id) {
+        return undefined;
+    }
+    iobStateVal(state) {
+        return undefined;
     }
 }
 Domain.abbreviations = {

@@ -89,9 +89,10 @@ class HassMqtt extends utils.Adapter {
             }
             for (let s in states) {
                 if (states.hasOwnProperty(s)) {
+                    const st = states[s];
                     s = s.substring(`${this.config.mqttClientInstantID}.`.length);
-                    this.log.debug(`Read state in ready. id=${s}`);
-                    this.handleHassMqttStates(s, states[s]);
+                    this.log.debug(`Read state in ready. id=${s} state=${JSON.stringify(st)}`);
+                    this.handleHassMqttStates(s, st);
                 }
             }
         });
@@ -188,7 +189,6 @@ class HassMqtt extends utils.Adapter {
                 if (states[s].native && states[s].native.topic) {
                     const ct = `${states[s].native.topic.replace(/\//g, ".")}`;
                     this.mqttId2device[ct] = dev;
-                    this.subscribeForeignStates(`${this.config.mqttClientInstantID}.${ct}`);
                     this.getForeignState(`${this.config.mqttClientInstantID}.${ct}`, (err, cs) => {
                         if (err) {
                             this.log.info(`Read Custom topic(${ct}) failed: ${err}.`);
@@ -200,6 +200,7 @@ class HassMqtt extends utils.Adapter {
                         }
                         this.handleCustomMqttStates(ct, cs);
                     });
+                    this.subscribeForeignStates(`${this.config.mqttClientInstantID}.${ct}`);
                 }
             }
         }
@@ -217,7 +218,13 @@ class HassMqtt extends utils.Adapter {
             }
         } else if (this.mqttId2device[id]) {
             const dev = this.mqttId2device[id];
-            dev.stateChange(id, state.val);
+            dev.mqttStateChange(id, state.val, (err, iobState, iobVal) => {
+                if (err) {
+                    this.log.error(`Set mqtt state change failed. ${err}`);
+                    return;
+                }
+                this.setState(`${this.config.hassPrefix}.${dev.domain}.${dev.entityID}.${iobState}`, iobVal, true);
+            });
         } else {
             this.log.warn(`Hass MQTT id (${id}) doesn't connect to device.`);
         }
@@ -230,7 +237,13 @@ class HassMqtt extends utils.Adapter {
             return;
         }
         this.log.debug(`handle custom mqtt topic ${id}`);
-        dev.stateChange(id, state.val);
+        dev.mqttStateChange(id, state.val, (err, iobState, iobVal) => {
+            if (err) {
+                this.log.error(`Set mqtt state change failed. ${err}`);
+                return;
+            }
+            this.setState(`${this.config.hassPrefix}.${dev.domain}.${dev.entityID}.${iobState}`, iobVal, true);
+        });
     }
     // /**
     //  * Some message was sent to this instance over message box. Used by email, pushover, text2speech, ...

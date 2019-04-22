@@ -68,7 +68,18 @@ export class HassDevice {
         return (typeof this._instant !== "undefined");
     }
 
-    public stateChange(id: string, val: any) {
-        this._instant.stateChange(id, val);
+    /**
+     * 
+     * @param id MQTT Topic
+     * @param val MQTT Topic Value
+     * @param callback update object value
+     */
+    public mqttStateChange(id: string, val: any, callback: (err: string | null, state?: string, iobVal?: any) => void) {
+        const state = this._instant.idToState(id);
+        if (typeof state === "undefined") {
+            callback(`Can not find state matched this ID ${id}`);
+        }
+        this._instant.mqttStateChange(state, val);
+        callback(null, state, this._instant.iobStateVal(state));
     }
 }
