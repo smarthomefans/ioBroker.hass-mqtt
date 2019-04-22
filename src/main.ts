@@ -140,7 +140,7 @@ class HassMqtt extends utils.Adapter {
         if (state) {
             // The state was changed
             this.log.info(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
-            if (id.indexOf(`${this.config.mqttClientInstantID}`)) {
+            if (id.indexOf(`${this.config.mqttClientInstantID}`) === 0) {
                 id = id.substring(`${this.config.mqttClientInstantID}.`.length);
                 if (id === `info.connection`) {
                     if (state.val) {
@@ -159,7 +159,7 @@ class HassMqtt extends utils.Adapter {
         } else {
             // The state was deleted
             this.log.info(`state ${id} deleted`);
-            if (id.indexOf(`${this.config.mqttClientInstantID}`)) {
+            if (id.indexOf(`${this.config.mqttClientInstantID}`) === 0) {
                 id = id.substring(`${this.config.mqttClientInstantID}.`.length);
                 if (id === `info.connection`) {
                     this.setState("info.connection", false, true);
