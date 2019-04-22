@@ -183,7 +183,7 @@ export class Domain {
         return undefined;
     }
 
-    public stateChange(id: string, val: any, callback: (val: any) => void) {
+    public stateChange(id: string, val: any) {
         return;
     }
 /**

@@ -45,7 +45,7 @@ class Domain {
     getIobStates() {
         return undefined;
     }
-    stateChange(id, val, callback) {
+    stateChange(id, val) {
         return;
     }
 }

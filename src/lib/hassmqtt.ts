@@ -18,58 +18,57 @@ export type hassState = string | boolean | number;
 
 export type hassAttr = string | boolean | number;
 
-export interface HassDevice {
-    domain: string;
-    entityID: string;
-    friendlyName: string;
-    nodeID?: string;
-    state?: hassState;
-    attrs?: Record<string, hassAttr>;
+export class HassDevice {
+    public domain: string;
+    public entityID: string;
+    public friendlyName: string;
+    public nodeID?: string;
+    public state?: hassState;
+    public attrs?: Record<string, hassAttr>;
     // TODO: fix any
-    instant: any;
-}
+    private _instant: any;
 
-export function deleteDevice(id: string, callback?: (dev: HassDevice) => void) {
+    constructor(id: string, val: string) {
+        this.domain = "";
+        this.entityID = "";
+        this.friendlyName = "";
+        this._instant = undefined;
 
-}
+        const match = id.split(".");
 
-export function addDevice(id: string, val: string, callback: (dev: HassDevice) => void) {
-    const match = id.split(".");
-    const dev: HassDevice = {
-        domain: "",
-        entityID: "",
-        friendlyName: "",
-        instant: undefined,
-    };
-    if (!match || match.length > 4) {
-        return;
+        if (!match || match.length > 5) {
+            return;
+        }
+        if (match.length === 5) {
+            this.domain = match[1];
+            this.nodeID = match[2];
+            this.entityID = match[3];
+            this.friendlyName = match[3];
+        } else if (match.length === 4) {
+            this.domain = match[1];
+            this.entityID = match[2];
+            this.friendlyName = match[2];
+        }
+
+        if (!supportedDomain[this.domain]) {
+            // This domain not supported.
+            return;
+        }
+        this._instant = new supportedDomain[this.domain](val);
+        if (this._instant.name) {
+            this.friendlyName = this._instant.name;
+        }
     }
-    if (match.length === 4) {
-        dev.domain = match[0];
-        dev.nodeID = match[1];
-        dev.entityID = match[2];
-        dev.friendlyName = match[2];
-    } else if (match.length === 3) {
-        dev.domain = match[0];
-        dev.entityID = match[1];
-        dev.friendlyName = match[1];
+
+    public get iobStates() {
+        return this._instant.getIobStates();
     }
 
-    if (!supportedDomain[dev.domain]) {
-        // This domain not supported.
-        return;
+    public get ready() {
+        return (typeof this._instant !== "undefined");
     }
-    dev.instant = new supportedDomain[dev.domain](val);
-    if (dev.instant.name) {
-        dev.friendlyName = dev.instant.name;
+
+    public stateChange(id: string, val: any) {
+        this._instant.stateChange(id, val);
     }
-    callback(dev);
-}
-
-export function stateChange(id: string, val: string, callback: (state: hassState) => void) {
-
-}
-
-export function attributeChange(id: string, val: string, callback: (attr: hassAttr) => void) {
-
 }

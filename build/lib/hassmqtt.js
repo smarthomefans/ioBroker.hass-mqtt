@@ -13,45 +13,44 @@ const supportedDomain = {
     //    "sensor": null,
     switch: switch_1.HaSwitch,
 };
-function deleteDevice(id, callback) {
+class HassDevice {
+    constructor(id, val) {
+        this.domain = "";
+        this.entityID = "";
+        this.friendlyName = "";
+        this._instant = undefined;
+        const match = id.split(".");
+        if (!match || match.length > 5) {
+            return;
+        }
+        if (match.length === 5) {
+            this.domain = match[1];
+            this.nodeID = match[2];
+            this.entityID = match[3];
+            this.friendlyName = match[3];
+        }
+        else if (match.length === 4) {
+            this.domain = match[1];
+            this.entityID = match[2];
+            this.friendlyName = match[2];
+        }
+        if (!supportedDomain[this.domain]) {
+            // This domain not supported.
+            return;
+        }
+        this._instant = new supportedDomain[this.domain](val);
+        if (this._instant.name) {
+            this.friendlyName = this._instant.name;
+        }
+    }
+    get iobStates() {
+        return this._instant.getIobStates();
+    }
+    get ready() {
+        return (typeof this._instant !== "undefined");
+    }
+    stateChange(id, val) {
+        this._instant.stateChange(id, val);
+    }
 }
-exports.deleteDevice = deleteDevice;
-function addDevice(id, val, callback) {
-    const match = id.split(".");
-    const dev = {
-        domain: "",
-        entityID: "",
-        friendlyName: "",
-        instant: undefined,
-    };
-    if (!match || match.length > 4) {
-        return;
-    }
-    if (match.length === 4) {
-        dev.domain = match[0];
-        dev.nodeID = match[1];
-        dev.entityID = match[2];
-        dev.friendlyName = match[2];
-    }
-    else if (match.length === 3) {
-        dev.domain = match[0];
-        dev.entityID = match[1];
-        dev.friendlyName = match[1];
-    }
-    if (!supportedDomain[dev.domain]) {
-        // This domain not supported.
-        return;
-    }
-    dev.instant = new supportedDomain[dev.domain](val);
-    if (dev.instant.name) {
-        dev.friendlyName = dev.instant.name;
-    }
-    callback(dev);
-}
-exports.addDevice = addDevice;
-function stateChange(id, val, callback) {
-}
-exports.stateChange = stateChange;
-function attributeChange(id, val, callback) {
-}
-exports.attributeChange = attributeChange;
+exports.HassDevice = HassDevice;
