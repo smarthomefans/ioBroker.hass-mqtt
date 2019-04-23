@@ -54,6 +54,15 @@ class Domain {
     iobStateVal(state) {
         return undefined;
     }
+    iobStateChange(state, val) {
+        return;
+    }
+    stateToId(state) {
+        return undefined;
+    }
+    mqttPayload(state) {
+        return undefined;
+    }
 }
 Domain.abbreviations = {
     aux_cmd_t: "aux_command_topic",

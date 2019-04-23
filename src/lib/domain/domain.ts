@@ -194,6 +194,18 @@ export class Domain {
     public iobStateVal(state: string): any | undefined {
         return undefined;
     }
+
+    public iobStateChange(state: string, val: any) {
+        return;
+    }
+
+    public stateToId(state: string): string | undefined {
+        return undefined;
+    }
+
+    public mqttPayload(state: string): any | undefined {
+        return undefined;
+    }
 /**
  * device
 (map)(Optional)Information about the device this switch is a part of to tie it into the device registry. Only works through MQTT discovery and when unique_id is set.

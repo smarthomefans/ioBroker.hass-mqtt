@@ -122,4 +122,43 @@ export class HaSwitch extends Domain {
         }
         return undefined;
     }
+
+    public stateToId(state: string): string | undefined {
+        const st = this.iobStates[state];
+        if ((typeof st === "undefined") ||
+            (typeof st.native === "undefined") ||
+            (typeof st.native.topic === "undefined")) {
+            return undefined;
+        }
+        return st.native.topic.replace(/\//g, ".");
+    }
+
+    public iobStateChange(state: string, val: any) {
+        if (state === "command") {
+            if (typeof val === "boolean") {
+                if (val) {
+                    this.commandTopicValue = this.payloadOn;
+                } else {
+                    this.commandTopicValue = this.payloadOff;
+                }
+            }
+        } else if (state === "state") {
+            if (typeof val === "boolean") {
+                if (val) {
+                    this.stateTopicValue = this.stateOn;
+                } else {
+                    this.stateTopicValue = this.stateOff;
+                }
+            }
+        }
+    }
+
+    public mqttPayload(state: string): any | undefined {
+        if (state === "command") {
+            return this.commandTopicValue;
+        } else if (state === "state") {
+            return this.stateTopicValue;
+        }
+        return undefined;
+    }
 }

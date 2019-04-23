@@ -1,3 +1,4 @@
+import {Domain} from "./domain/domain";
 import {HaSwitch} from "./domain/switch";
 
 const supportedDomain: Record<string, any> = {
@@ -25,14 +26,12 @@ export class HassDevice {
     public nodeID?: string;
     public state?: hassState;
     public attrs?: Record<string, hassAttr>;
-    // TODO: fix any
-    private _instant: any;
+    private _instant?: Domain;
 
     constructor(id: string, val: string) {
         this.domain = "";
         this.entityID = "";
         this.friendlyName = "";
-        this._instant = undefined;
 
         const match = id.split(".");
 
@@ -55,12 +54,19 @@ export class HassDevice {
             return;
         }
         this._instant = new supportedDomain[this.domain](val);
+        if (typeof this._instant === "undefined") {
+            return;
+        }
+
         if (this._instant.name) {
             this.friendlyName = this._instant.name;
         }
     }
 
     public get iobStates() {
+        if (typeof this._instant === "undefined") {
+            return undefined;
+        }
         return this._instant.getIobStates();
     }
 
@@ -75,11 +81,37 @@ export class HassDevice {
      * @param callback update object value
      */
     public mqttStateChange(id: string, val: any, callback: (err: string | null, state?: string, iobVal?: any) => void) {
+        if (typeof this._instant === "undefined") {
+            callback("Uninitialized device");
+            return;
+        }
         const state = this._instant.idToState(id);
         if (typeof state === "undefined") {
             callback(`Can not find state matched this ID ${id}`);
+            return;
         }
         this._instant.mqttStateChange(state, val);
         callback(null, state, this._instant.iobStateVal(state));
+    }
+
+    public iobStateChange(id: string, val: any, callback: (err: string | null, mqttID?: string, mqttVal?: any) => void) {
+        if (typeof this._instant === "undefined") {
+            callback("Uninitialized device");
+            return;
+        }
+        const match = id.split(".");
+        if (!match || match.length !== 4) {
+            callback(`Invalid ioBroker state ID: ${id}`);
+            return;
+        }
+        const state = match[3];
+        const mqttID = this._instant.stateToId(state);
+        if (typeof mqttID === "undefined") {
+            callback(`No need to publish state: ${state}`);
+            return;
+        }
+
+        this._instant.iobStateChange(state, val);
+        callback(null, mqttID, this._instant.mqttPayload(state));
     }
 }

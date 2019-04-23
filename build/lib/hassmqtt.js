@@ -18,7 +18,6 @@ class HassDevice {
         this.domain = "";
         this.entityID = "";
         this.friendlyName = "";
-        this._instant = undefined;
         const match = id.split(".");
         if (!match || match.length > 5) {
             return;
@@ -39,11 +38,17 @@ class HassDevice {
             return;
         }
         this._instant = new supportedDomain[this.domain](val);
+        if (typeof this._instant === "undefined") {
+            return;
+        }
         if (this._instant.name) {
             this.friendlyName = this._instant.name;
         }
     }
     get iobStates() {
+        if (typeof this._instant === "undefined") {
+            return undefined;
+        }
         return this._instant.getIobStates();
     }
     get ready() {
@@ -56,12 +61,36 @@ class HassDevice {
      * @param callback update object value
      */
     mqttStateChange(id, val, callback) {
+        if (typeof this._instant === "undefined") {
+            callback("Uninitialized device");
+            return;
+        }
         const state = this._instant.idToState(id);
         if (typeof state === "undefined") {
             callback(`Can not find state matched this ID ${id}`);
+            return;
         }
         this._instant.mqttStateChange(state, val);
         callback(null, state, this._instant.iobStateVal(state));
+    }
+    iobStateChange(id, val, callback) {
+        if (typeof this._instant === "undefined") {
+            callback("Uninitialized device");
+            return;
+        }
+        const match = id.split(".");
+        if (!match || match.length !== 4) {
+            callback(`Invalid ioBroker state ID: ${id}`);
+            return;
+        }
+        const state = match[3];
+        const mqttID = this._instant.stateToId(state);
+        if (typeof mqttID === "undefined") {
+            callback(`No need to publish state: ${state}`);
+            return;
+        }
+        this._instant.iobStateChange(state, val);
+        callback(null, mqttID, this._instant.mqttPayload(state));
     }
 }
 exports.HassDevice = HassDevice;

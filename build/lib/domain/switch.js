@@ -107,5 +107,45 @@ class HaSwitch extends domain_1.Domain {
         }
         return undefined;
     }
+    stateToId(state) {
+        const st = this.iobStates[state];
+        if ((typeof st === "undefined") ||
+            (typeof st.native === "undefined") ||
+            (typeof st.native.topic === "undefined")) {
+            return undefined;
+        }
+        return st.native.topic.replace(/\//g, ".");
+    }
+    iobStateChange(state, val) {
+        if (state === "command") {
+            if (typeof val === "boolean") {
+                if (val) {
+                    this.commandTopicValue = this.payloadOn;
+                }
+                else {
+                    this.commandTopicValue = this.payloadOff;
+                }
+            }
+        }
+        else if (state === "state") {
+            if (typeof val === "boolean") {
+                if (val) {
+                    this.stateTopicValue = this.stateOn;
+                }
+                else {
+                    this.stateTopicValue = this.stateOff;
+                }
+            }
+        }
+    }
+    mqttPayload(state) {
+        if (state === "command") {
+            return this.commandTopicValue;
+        }
+        else if (state === "state") {
+            return this.stateTopicValue;
+        }
+        return undefined;
+    }
 }
 exports.HaSwitch = HaSwitch;
