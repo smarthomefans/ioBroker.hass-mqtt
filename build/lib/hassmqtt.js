@@ -70,8 +70,14 @@ class HassDevice {
             callback(`Can not find state matched this ID ${id}`);
             return;
         }
-        this._instant.mqttStateChange(state, val);
-        callback(null, state, this._instant.iobStateVal(state));
+        const oldVal = this._instant.mqttPayload(state);
+        if (val !== oldVal) {
+            this._instant.mqttStateChange(state, val);
+            callback(null, state, this._instant.iobStateVal(state));
+        }
+        else {
+            callback("NO CHANGE");
+        }
     }
     iobStateChange(id, val, callback) {
         if (typeof this._instant === "undefined") {
@@ -79,18 +85,24 @@ class HassDevice {
             return;
         }
         const match = id.split(".");
-        if (!match || match.length !== 4) {
+        if (!match || match.length !== 3) {
             callback(`Invalid ioBroker state ID: ${id}`);
             return;
         }
-        const state = match[3];
+        const state = match[2];
         const mqttID = this._instant.stateToId(state);
         if (typeof mqttID === "undefined") {
             callback(`No need to publish state: ${state}`);
             return;
         }
-        this._instant.iobStateChange(state, val);
-        callback(null, mqttID, this._instant.mqttPayload(state));
+        const oldVal = this._instant.iobStateVal(state);
+        if (val !== oldVal) {
+            this._instant.iobStateChange(state, val);
+            callback(null, mqttID, this._instant.mqttPayload(state));
+        }
+        else {
+            callback("NO CHANGE");
+        }
     }
 }
 exports.HassDevice = HassDevice;

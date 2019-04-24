@@ -183,7 +183,7 @@ export class Domain {
         return undefined;
     }
 
-    public mqttStateChange(state: string, val: any) {
+    public mqttStateChange(state: string, val: string) {
         return;
     }
 

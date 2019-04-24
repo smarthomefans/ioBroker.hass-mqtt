@@ -80,7 +80,7 @@ export class HassDevice {
      * @param val MQTT Topic Value
      * @param callback update object value
      */
-    public mqttStateChange(id: string, val: any, callback: (err: string | null, state?: string, iobVal?: any) => void) {
+    public mqttStateChange(id: string, val: string, callback: (err: string | null, state?: string, iobVal?: any) => void) {
         if (typeof this._instant === "undefined") {
             callback("Uninitialized device");
             return;
@@ -90,8 +90,13 @@ export class HassDevice {
             callback(`Can not find state matched this ID ${id}`);
             return;
         }
-        this._instant.mqttStateChange(state, val);
-        callback(null, state, this._instant.iobStateVal(state));
+        const oldVal = this._instant.mqttPayload(state);
+        if (val !== oldVal) {
+            this._instant.mqttStateChange(state, val);
+            callback(null, state, this._instant.iobStateVal(state));
+        } else {
+            callback("NO CHANGE");
+        }
     }
 
     public iobStateChange(id: string, val: any, callback: (err: string | null, mqttID?: string, mqttVal?: any) => void) {
@@ -100,18 +105,23 @@ export class HassDevice {
             return;
         }
         const match = id.split(".");
-        if (!match || match.length !== 4) {
+        if (!match || match.length !== 3) {
             callback(`Invalid ioBroker state ID: ${id}`);
             return;
         }
-        const state = match[3];
+        const state = match[2];
         const mqttID = this._instant.stateToId(state);
         if (typeof mqttID === "undefined") {
             callback(`No need to publish state: ${state}`);
             return;
         }
 
-        this._instant.iobStateChange(state, val);
-        callback(null, mqttID, this._instant.mqttPayload(state));
+        const oldVal = this._instant.iobStateVal(state);
+        if (val !== oldVal) {
+            this._instant.iobStateChange(state, val);
+            callback(null, mqttID, this._instant.mqttPayload(state));
+        } else {
+            callback("NO CHANGE");
+        }
     }
 }

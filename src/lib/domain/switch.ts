@@ -65,7 +65,7 @@ export class HaSwitch extends Domain {
                     write: false,
                 },
                 native: {
-                    topic: this.stateTopic,
+                    customTopic: this.stateTopic,
                 },
             },
             command: {
@@ -79,7 +79,7 @@ export class HaSwitch extends Domain {
                     write: true,
                 },
                 native: {
-                    topic: this.commandTopic,
+                    customTopic: this.commandTopic,
                 },
             },
         };
@@ -93,7 +93,7 @@ export class HaSwitch extends Domain {
         for (const s in this.iobStates) {
             if (this.iobStates.hasOwnProperty(s)) {
                 const st = this.iobStates[s];
-                if (st.native && st.native.topic && st.native.topic.replace(/\//g, ".") === id) {
+                if (st.native && st.native.customTopic && st.native.customTopic.replace(/\//g, ".") === id) {
                     return s;
                 }
             }
@@ -101,7 +101,7 @@ export class HaSwitch extends Domain {
         return undefined;
     }
 
-    public mqttStateChange(state: string, val: any) {
+    public mqttStateChange(state: string, val: string) {
         if (state === "command") {
             if (typeof val === "string") {
                 this.commandTopicValue = val;
@@ -127,10 +127,10 @@ export class HaSwitch extends Domain {
         const st = this.iobStates[state];
         if ((typeof st === "undefined") ||
             (typeof st.native === "undefined") ||
-            (typeof st.native.topic === "undefined")) {
+            (typeof st.native.customTopic === "undefined")) {
             return undefined;
         }
-        return st.native.topic.replace(/\//g, ".");
+        return st.native.customTopic.replace(/\//g, ".");
     }
 
     public iobStateChange(state: string, val: any) {

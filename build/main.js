@@ -119,6 +119,7 @@ class HassMqtt extends utils.Adapter {
             // The state was changed
             this.log.info(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
             if (id.indexOf(`${this.config.mqttClientInstantID}`) === 0) {
+                // MQTT topic change, need sync to adapter's state.
                 id = id.substring(`${this.config.mqttClientInstantID}.`.length);
                 if (id === `info.connection`) {
                     if (state.val) {
@@ -136,26 +137,9 @@ class HassMqtt extends utils.Adapter {
                 }
             }
             else if (id.indexOf(`${this.namespace}`) === 0) {
+                // Adapter's state change, need send payload to MQTT topic.
                 id = id.substring(`${this.namespace}.`.length);
-                this.getState(id, (err, st) => {
-                    if (err) {
-                        this.log.error(`Get state failed in onStateChange, ${err}`);
-                        return;
-                    }
-                    if (!st) {
-                        this.log.error(`Get empty state in onStateChange`);
-                        return;
-                    }
-                    if (st.val !== state.val) {
-                        this.log.debug("different status val");
-                        this.handleSelfStateChange(id, state);
-                        return;
-                    }
-                    else {
-                        this.log.debug("same status val");
-                        return;
-                    }
-                });
+                this.handleSelfStateChange(id, state);
             }
             else {
                 this.log.warn(`Got unexpected id: ${id}`);
@@ -188,10 +172,10 @@ class HassMqtt extends utils.Adapter {
         }
         for (const s in states) {
             if (states.hasOwnProperty(s)) {
-                this.stateId2device[`${this.config.hassPrefix}.${dev.domain}.${dev.entityID}.${s}`] = dev;
-                this.setObject(`${this.config.hassPrefix}.${dev.domain}.${dev.entityID}.${s}`, states[s], true);
-                if (states[s].native && states[s].native.topic) {
-                    const ct = `${states[s].native.topic.replace(/\//g, ".")}`;
+                this.stateId2device[`${dev.domain}.${dev.entityID}.${s}`] = dev;
+                this.setObject(`${dev.domain}.${dev.entityID}.${s}`, states[s], true);
+                if (states[s].native && states[s].native.customTopic) {
+                    const ct = `${states[s].native.customTopic.replace(/\//g, ".")}`;
                     this.mqttId2device[ct] = dev;
                     this.getForeignState(`${this.config.mqttClientInstantID}.${ct}`, (err, cs) => {
                         if (err) {
@@ -208,7 +192,7 @@ class HassMqtt extends utils.Adapter {
                 }
             }
         }
-        this.setState(`${this.config.hassPrefix}.${dev.domain}.${dev.entityID}.name`, dev.friendlyName, true);
+        this.setState(`${dev.domain}.${dev.entityID}.name`, dev.friendlyName, true);
         this.mqttId2device[id] = dev;
     }
     handleHassMqttStates(id, state) {
@@ -225,10 +209,13 @@ class HassMqtt extends utils.Adapter {
             const dev = this.mqttId2device[id];
             dev.mqttStateChange(id, state.val, (err, iobState, iobVal) => {
                 if (err) {
+                    if (err === "NO CHANGE") {
+                        return;
+                    }
                     this.log.error(`Set mqtt state change failed. ${err}`);
                     return;
                 }
-                this.setState(`${this.config.hassPrefix}.${dev.domain}.${dev.entityID}.${iobState}`, iobVal, true);
+                this.setState(`${dev.domain}.${dev.entityID}.${iobState}`, iobVal, true);
             });
         }
         else {
@@ -244,10 +231,13 @@ class HassMqtt extends utils.Adapter {
         this.log.debug(`handle custom mqtt topic ${id}`);
         dev.mqttStateChange(id, state.val, (err, iobState, iobVal) => {
             if (err) {
+                if (err === "NO CHANGE") {
+                    return;
+                }
                 this.log.error(`Set mqtt state change failed. ${err}`);
                 return;
             }
-            this.setState(`${this.config.hassPrefix}.${dev.domain}.${dev.entityID}.${iobState}`, iobVal, true);
+            this.setState(`${dev.domain}.${dev.entityID}.${iobState}`, iobVal, true);
         });
     }
     handleSelfStateChange(id, state) {
@@ -255,10 +245,15 @@ class HassMqtt extends utils.Adapter {
             const dev = this.stateId2device[id];
             dev.iobStateChange(id, state.val, (err, mqttID, mqttVal) => {
                 if (err) {
+                    if (err === "NO CHANGE") {
+                        this.log.debug(err);
+                        return;
+                    }
                     this.log.error(`Set ioBroker state change failed. ${err}`);
                     return;
                 }
-                this.setForeignState(`${this.config.mqttClientInstantID}.${mqttID}`, mqttVal, true);
+                this.setForeignState(`${this.config.mqttClientInstantID}.${mqttID}`, mqttVal, false);
+                this.setState(id, state);
             });
         }
     }
