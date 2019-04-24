@@ -1,40 +1,24 @@
-import {Domain} from "./domain/domain";
-import {HaSwitch} from "./domain/switch";
-
-const supportedDomain: Record<string, any> = {
-//    "alarm_control_panel",
-//    "binary_sensor": null,
-//    "camera",
-//    "cover": null,
-//    "fan",
-//    "climate",
-//    "light",
-//    "lock": null,
-//    "sensor": null,
-    switch: HaSwitch,
-//    "vacuum",
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const switch_1 = require("./domain/switch");
+const supportedDomain = {
+    //    "alarm_control_panel",
+    //    "binary_sensor": null,
+    //    "camera",
+    //    "cover": null,
+    //    "fan",
+    //    "climate",
+    //    "light",
+    //    "lock": null,
+    //    "sensor": null,
+    switch: switch_1.HaSwitch,
 };
-
-export type hassState = string | boolean | number;
-
-export type hassAttr = string | boolean | number;
-
-export class HassDevice {
-    public domain: string;
-    public entityID: string;
-    public friendlyName: string;
-    public nodeID?: string;
-    public state?: hassState;
-    public attrs?: Record<string, hassAttr>;
-    private _instant?: Domain;
-
-    constructor(id: string, val: string) {
+class HassDevice {
+    constructor(id, val) {
         this.domain = "";
         this.entityID = "";
         this.friendlyName = "";
-
         const match = id.split(".");
-
         if (!match || match.length > 5) {
             return;
         }
@@ -43,12 +27,12 @@ export class HassDevice {
             this.nodeID = match[2];
             this.entityID = match[3];
             this.friendlyName = match[3];
-        } else if (match.length === 4) {
+        }
+        else if (match.length === 4) {
             this.domain = match[1];
             this.entityID = match[2];
             this.friendlyName = match[2];
         }
-
         if (!supportedDomain[this.domain]) {
             // This domain not supported.
             return;
@@ -57,30 +41,26 @@ export class HassDevice {
         if (typeof this._instant === "undefined") {
             return;
         }
-
         if (this._instant.name) {
             this.friendlyName = this._instant.name;
         }
     }
-
-    public get iobStates() {
+    get iobStates() {
         if (typeof this._instant === "undefined") {
             return undefined;
         }
         return this._instant.getIobStates();
     }
-
-    public get ready() {
+    get ready() {
         return (typeof this._instant !== "undefined");
     }
-
     /**
-     * 
+     *
      * @param id MQTT Topic
      * @param val MQTT Topic Value
      * @param callback update object value
      */
-    public mqttStateChange(id: string, val: string, callback: (err: string | null, state?: string, iobVal?: any) => void) {
+    mqttStateChange(id, val, callback) {
         if (typeof this._instant === "undefined") {
             callback("Uninitialized device");
             return;
@@ -94,12 +74,12 @@ export class HassDevice {
         if (val !== oldVal) {
             this._instant.mqttStateChange(state, val);
             callback(null, state, this._instant.iobStateVal(state));
-        } else {
+        }
+        else {
             callback("NO CHANGE");
         }
     }
-
-    public iobStateChange(id: string, val: any, callback: (err: string | null, mqttID?: string, mqttVal?: any) => void) {
+    iobStateChange(id, val, callback) {
         if (typeof this._instant === "undefined") {
             callback("Uninitialized device");
             return;
@@ -115,13 +95,14 @@ export class HassDevice {
             callback(`No need to publish state: ${state}`);
             return;
         }
-
         const oldVal = this._instant.iobStateVal(state);
         if (val !== oldVal) {
             this._instant.iobStateChange(state, val);
             callback(null, mqttID, this._instant.mqttPayload(state));
-        } else {
+        }
+        else {
             callback("NO CHANGE");
         }
     }
 }
+exports.HassDevice = HassDevice;
