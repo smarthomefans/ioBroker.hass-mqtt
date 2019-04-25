@@ -193,7 +193,7 @@ class HassMqtt extends utils.Adapter {
                                 native: {
                                     topic: states[s].native.customTopic,
                                 },
-                                type: 'state',
+                                type: "state",
                             };
                             this.setForeignObject(`${this.config.mqttClientInstantID}.${ct}`, obj, true);
                         }
@@ -267,14 +267,13 @@ class HassMqtt extends utils.Adapter {
             dev.iobStateChange(id, state.val, (err, mqttID, mqttVal) => {
                 if (err) {
                     if (err === "NO CHANGE") {
-                        this.log.debug(err);
                         return;
                     }
                     this.log.error(`Set ioBroker state change failed. ${err}`);
                     return;
                 }
                 this.setForeignState(`${this.config.mqttClientInstantID}.${mqttID}`, mqttVal, false);
-                this.setState(id, state);
+                this.setState(id, { ack: true });
             });
         }
     }
