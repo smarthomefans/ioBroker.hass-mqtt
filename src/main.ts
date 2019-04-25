@@ -191,6 +191,27 @@ class HassMqtt extends utils.Adapter {
                 if (states[s].native && states[s].native.customTopic) {
                     const ct = `${states[s].native.customTopic.replace(/\//g, ".")}`;
                     this.mqttId2device[ct] = dev;
+                    this.getForeignObject(`${this.config.mqttClientInstantID}.${ct}`, (_, obj) => {
+                        if (!obj) {
+                            // MQTT topic never be received, Create object first.
+                            obj = {
+                                _id: `${this.config.mqttClientInstantID}.${ct}`,
+                                common: {
+                                    name:  states[s].native.customTopic,
+                                    write: true,
+                                    read:  true,
+                                    role:  "variable",
+                                    desc:  "mqtt client variable",
+                                    type: "boolean",
+                                },
+                                native: {
+                                    topic: states[s].native.customTopic,
+                                },
+                                type: 'state',
+                            };
+                            this.setForeignObject(`${this.config.mqttClientInstantID}.${ct}`, obj, true);
+                        }
+                    });
                     this.getForeignState(`${this.config.mqttClientInstantID}.${ct}`, (err, cs) => {
                         if (err) {
                             this.log.info(`Read Custom topic(${ct}) failed: ${err}.`);

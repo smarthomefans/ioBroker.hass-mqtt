@@ -72,9 +72,9 @@ export class HaSwitch extends Domain {
                 type: "state",
                 common: {
                     role: "switch",
-                    name: "state",
+                    name: "command",
                     type: "boolean",
-                    desc: "Switch state",
+                    desc: "Set switch state",
                     read: false,
                     write: true,
                 },
