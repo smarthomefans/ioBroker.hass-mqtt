@@ -35,6 +35,12 @@ export class HassDevice {
 
         const match = id.split(".");
 
+        try {
+            JSON.parse(val);
+        } catch (e) {
+            return ;
+        }
+
         if (!match || match.length > 5) {
             return;
         }
