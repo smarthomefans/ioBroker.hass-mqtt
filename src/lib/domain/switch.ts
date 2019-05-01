@@ -32,8 +32,8 @@ export class HaSwitch extends Domain {
         this.payloadOff = this.getConfigString("payload_off") || "OFF";
         this.commandTopicValue = this.payloadOff;
         this.stateTopic = this.getConfigString("state_topic");
-        this.stateOn = this.getConfigString("state_on") || "ON";
-        this.stateOff = this.getConfigString("state_off") || "OFF";
+        this.stateOn = this.getConfigString("state_on") || this.payloadOn || "ON";
+        this.stateOff = this.getConfigString("state_off") || this.payloadOff || "OFF";
         this.stateTopicValue = this.stateOff;
         this.availabilityTopic = this.getConfigString("availability_topic");
         if (this.availabilityTopic !== "") {

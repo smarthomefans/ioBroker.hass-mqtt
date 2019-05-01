@@ -31,7 +31,7 @@ class HassDevice {
         if (match.length === 5) {
             this.domain = match[1];
             this.nodeID = match[2];
-            this.entityID = match[3];
+            this.entityID = `${this.nodeID}.${match[3]}`;
             this.friendlyName = match[3];
         }
         else if (match.length === 4) {
@@ -91,11 +91,11 @@ class HassDevice {
             return;
         }
         const match = id.split(".");
-        if (!match || match.length !== 3) {
+        if (!match || match.length < 3) {
             callback(`Invalid ioBroker state ID: ${id}`);
             return;
         }
-        const state = match[2];
+        const state = match[match.length - 1];
         const mqttID = this._instant.stateToId(state);
         if (typeof mqttID === "undefined") {
             callback(`No need to publish state: ${state}`);
