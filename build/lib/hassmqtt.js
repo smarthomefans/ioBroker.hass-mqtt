@@ -53,9 +53,21 @@ class HassDevice {
     }
     get iobStates() {
         if (typeof this._instant === "undefined") {
-            return undefined;
+            return {};
         }
         return this._instant.getIobStates();
+    }
+    get iobRole() {
+        if (this.domain === "switch")
+            return "switch";
+        else
+            return "";
+    }
+    get iobChannel() {
+        if (this.domain === "switch")
+            return "switch";
+        else
+            return "";
     }
     get ready() {
         return (typeof this._instant !== "undefined");
