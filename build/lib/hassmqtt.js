@@ -31,7 +31,7 @@ class HassDevice {
         if (match.length === 5) {
             this.domain = match[1];
             this.nodeID = match[2];
-            this.entityID = `${this.nodeID}.${match[3]}`;
+            this.entityID = match[3];
             this.friendlyName = match[3];
         }
         else if (match.length === 4) {
