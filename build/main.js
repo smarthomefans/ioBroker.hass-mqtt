@@ -20,6 +20,8 @@ class HassMqtt extends utils.Adapter {
         super(Object.assign({}, options, { name: "hass-mqtt" }));
         this.mqttId2device = {};
         this.stateId2device = {};
+        this.channelId2device = {};
+        this.deviceId2device = {};
         this.configReg = new RegExp(`(\w*\.)+config`);
         this.on("ready", this.onReady.bind(this));
         this.on("objectChange", this.onObjectChange.bind(this));
@@ -159,62 +161,149 @@ class HassMqtt extends utils.Adapter {
             }
         }
     }
-    handleHassMqttAddDevice(id, state) {
-        const dev = new hassmqtt_1.HassDevice(id, state.val);
+    _addDevSyncStateFromMqtt(dev, topic, sID, callback) {
+        const topicID = topic.replace(/\//g, ".");
+        this.getForeignObject(`${this.config.mqttClientInstantID}.${topicID}`, (_, oObj) => {
+            if (!oObj) {
+                // MQTT topic never be received. Create object first.
+                oObj = {
+                    _id: `${this.config.mqttClientInstantID}.${topicID}`,
+                    common: {
+                        name: topic,
+                        write: true,
+                        read: true,
+                        role: "variable",
+                        desc: "mqtt client variable",
+                        // TODO: fix boolean.
+                        type: "boolean",
+                    },
+                    native: {
+                        topic: topic,
+                    },
+                    type: "state",
+                };
+                this.setForeignObject(`${this.config.mqttClientInstantID}.${topicID}`, oObj, true);
+            }
+            else {
+                // MQTT topic exist. Sync topic value
+                this.getForeignState(`${this.config.mqttClientInstantID}.${topicID}`, (_, mqttState) => {
+                    if (!mqttState) {
+                        this.log.info(`Custom topic(${topic}) not ready yet.`);
+                        return;
+                    }
+                    dev.mqttStateChange(topicID, mqttState.val, (err, iobState, iobVal) => {
+                        if (err) {
+                            if (err === "NO CHANGE") {
+                                this.log.debug("MQTT state no change.");
+                                return;
+                            }
+                            this.log.error(`Set mqtt state change failed. ${err}`);
+                            return;
+                        }
+                        this.setState(sID, iobVal, true);
+                    });
+                });
+            }
+            callback(topicID);
+        });
+    }
+    // TODO: fix state any.
+    _addDevCreateState(dev, devID, channelID, stateID, state, callback) {
+        this.getObject(`${devID}.${channelID}.${stateID}`, (_, oObj) => {
+            if (!oObj) {
+                // State not exist. Create state.
+                this.createState(devID, channelID, stateID, state.common, state.native, (_, obj) => {
+                    if (stateID === "name") {
+                        this.setState(`${obj.id}`, dev.friendlyName, true);
+                    }
+                    else if (state.native && state.native.customTopic) {
+                        this._addDevSyncStateFromMqtt(dev, state.native.customTopic, obj.id, (topicID) => {
+                            this.mqttId2device[topicID] = dev;
+                            this.subscribeForeignStates(`${this.config.mqttClientInstantID}.${topicID}`);
+                        });
+                    }
+                    callback();
+                });
+            }
+            else {
+                // State exist. Update state.
+                this.extendObject(`${devID}.${channelID}.${stateID}`, state, (_, obj) => {
+                    if (stateID === "name") {
+                        this.setState(`${obj.id}`, dev.friendlyName, true);
+                    }
+                    else if (state.native && state.native.customTopic) {
+                        this._addDevSyncStateFromMqtt(dev, state.native.customTopic, obj.id, (topicID) => {
+                            this.mqttId2device[topicID] = dev;
+                            this.subscribeForeignStates(`${this.config.mqttClientInstantID}.${topicID}`);
+                        });
+                    }
+                    callback();
+                });
+            }
+        });
+    }
+    _addDevCreateChannel(dev, devID, channelID, callback) {
+        this.log.debug(`${devID}.${channelID}`);
+        this.getObject(`${devID}.${channelID}`, (_, oObj) => {
+            if (!oObj) {
+                // Channel not exist, Create channel.
+                this.createChannel(devID, channelID, () => {
+                    for (const sID in dev.iobStates) {
+                        if (dev.iobStates.hasOwnProperty(sID)) {
+                            const state = dev.iobStates[sID];
+                            this._addDevCreateState(dev, devID, channelID, sID, state, () => {
+                                this.stateId2device[`${devID}.${channelID}.${sID}`] = dev;
+                            });
+                        }
+                    }
+                    callback();
+                });
+            }
+            else {
+                // Channel exist. Update state if not exist.
+                for (const sID in dev.iobStates) {
+                    if (dev.iobStates.hasOwnProperty(sID)) {
+                        const state = dev.iobStates[sID];
+                        this._addDevCreateState(dev, devID, channelID, sID, state, () => {
+                            this.stateId2device[`${devID}.${channelID}.${sID}`] = dev;
+                        });
+                    }
+                }
+                callback();
+            }
+        });
+    }
+    _addDevCreateDev(dev, devID) {
+        this.getObject(devID, (_, oObj) => {
+            if (!oObj) {
+                this.createDevice(devID, () => {
+                    let cID = dev.iobChannel;
+                    if (dev.nodeID) {
+                        cID = `${cID}_${dev.entityID}`;
+                    }
+                    this._addDevCreateChannel(dev, devID, cID, () => {
+                        this.channelId2device[`${devID}.${cID}`] = dev;
+                    });
+                });
+            }
+            else {
+                let cID = dev.iobChannel;
+                if (dev.nodeID) {
+                    cID = `${cID}_${dev.entityID}`;
+                }
+                this._addDevCreateChannel(dev, devID, cID, () => {
+                    this.channelId2device[`${devID}.${cID}`] = dev;
+                });
+            }
+        });
+    }
+    handleHassMqttAddDevice(id, s) {
+        const dev = new hassmqtt_1.HassDevice(id, s.val);
         if (!dev.ready) {
             this.log.warn(`${id} not supported.`);
             return;
         }
-        const states = dev.iobStates;
-        if (typeof states === "undefined") {
-            this.log.warn(`${id} can not get ioBroker states.`);
-            return;
-        }
-        for (const s in states) {
-            if (states.hasOwnProperty(s)) {
-                this.stateId2device[`${dev.domain}.${dev.entityID}.${s}`] = dev;
-                this.setObject(`${dev.domain}.${dev.entityID}.${s}`, states[s], true);
-                if (states[s].native && states[s].native.customTopic) {
-                    const ct = `${states[s].native.customTopic.replace(/\//g, ".")}`;
-                    this.mqttId2device[ct] = dev;
-                    this.getForeignObject(`${this.config.mqttClientInstantID}.${ct}`, (_, obj) => {
-                        if (!obj) {
-                            // MQTT topic never be received, Create object first.
-                            obj = {
-                                _id: `${this.config.mqttClientInstantID}.${ct}`,
-                                common: {
-                                    name: states[s].native.customTopic,
-                                    write: true,
-                                    read: true,
-                                    role: "variable",
-                                    desc: "mqtt client variable",
-                                    type: "boolean",
-                                },
-                                native: {
-                                    topic: states[s].native.customTopic,
-                                },
-                                type: "state",
-                            };
-                            this.setForeignObject(`${this.config.mqttClientInstantID}.${ct}`, obj, true);
-                        }
-                    });
-                    this.getForeignState(`${this.config.mqttClientInstantID}.${ct}`, (err, cs) => {
-                        if (err) {
-                            this.log.info(`Read Custom topic(${ct}) failed: ${err}.`);
-                            return;
-                        }
-                        if (!cs) {
-                            this.log.info(`Custom topic(${ct}) not ready yet.`);
-                            return;
-                        }
-                        this.handleCustomMqttStates(ct, cs);
-                    });
-                    this.subscribeForeignStates(`${this.config.mqttClientInstantID}.${ct}`);
-                }
-            }
-        }
-        this.setState(`${dev.domain}.${dev.entityID}.name`, dev.friendlyName, true);
-        this.mqttId2device[id] = dev;
+        this._addDevCreateDev(dev, dev.nodeID || dev.entityID);
     }
     handleHassMqttStates(id, state) {
         // handle hass mqtt
@@ -236,7 +325,12 @@ class HassMqtt extends utils.Adapter {
                     this.log.error(`Set mqtt state change failed. ${err}`);
                     return;
                 }
-                this.setState(`${dev.domain}.${dev.entityID}.${iobState}`, iobVal, true);
+                if (dev.nodeID) {
+                    this.setState(`${dev.nodeID}.${dev.iobChannel}_${dev.entityID}.${iobState}`, iobVal, true);
+                }
+                else {
+                    this.setState(`${dev.entityID}.${dev.iobChannel}.${iobState}`, iobVal, true);
+                }
             });
         }
         else {
@@ -258,7 +352,12 @@ class HassMqtt extends utils.Adapter {
                 this.log.error(`Set mqtt state change failed. ${err}`);
                 return;
             }
-            this.setState(`${dev.domain}.${dev.entityID}.${iobState}`, iobVal, true);
+            if (dev.nodeID) {
+                this.setState(`${dev.nodeID}.${dev.iobChannel}_${dev.entityID}.${iobState}`, iobVal, true);
+            }
+            else {
+                this.setState(`${dev.entityID}.${dev.iobChannel}.${iobState}`, iobVal, true);
+            }
         });
     }
     handleSelfStateChange(id, state) {

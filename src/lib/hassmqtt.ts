@@ -47,7 +47,7 @@ export class HassDevice {
         if (match.length === 5) {
             this.domain = match[1];
             this.nodeID = match[2];
-            this.entityID = `${this.nodeID}.${match[3]}`;
+            this.entityID = match[3];
             this.friendlyName = match[3];
         } else if (match.length === 4) {
             this.domain = match[1];
@@ -71,9 +71,19 @@ export class HassDevice {
 
     public get iobStates() {
         if (typeof this._instant === "undefined") {
-            return undefined;
+            return {};
         }
         return this._instant.getIobStates();
+    }
+
+    public get iobRole() {
+        if (this.domain === "switch") return "switch";
+        else return "";
+    }
+
+    public get iobChannel() {
+        if (this.domain === "switch") return "switch";
+        else return "";
     }
 
     public get ready() {
