@@ -22,7 +22,6 @@ export class HaSwitch extends Domain {
     protected payloadAvailable?: string;
     protected payloadNotAvailable?: string;
     protected availabilityTopicValue?: string;
-    protected iobStates: Record<string, any>;
 
     constructor(config: string) {
         super(config);
@@ -85,22 +84,6 @@ export class HaSwitch extends Domain {
         };
     }
 
-    public getIobStates() {
-        return this.iobStates;
-    }
-
-    public idToState(id: string) {
-        for (const s in this.iobStates) {
-            if (this.iobStates.hasOwnProperty(s)) {
-                const st = this.iobStates[s];
-                if (st.native && st.native.customTopic && st.native.customTopic.replace(/\//g, ".") === id) {
-                    return s;
-                }
-            }
-        }
-        return undefined;
-    }
-
     public mqttStateChange(state: string, val: string) {
         if (state === "command") {
             if (typeof val === "string") {
@@ -121,16 +104,6 @@ export class HaSwitch extends Domain {
             return this.stateTopicValue === this.stateOn;
         }
         return undefined;
-    }
-
-    public stateToId(state: string): string | undefined {
-        const st = this.iobStates[state];
-        if ((typeof st === "undefined") ||
-            (typeof st.native === "undefined") ||
-            (typeof st.native.customTopic === "undefined")) {
-            return undefined;
-        }
-        return st.native.customTopic.replace(/\//g, ".");
     }
 
     public iobStateChange(state: string, val: any) {

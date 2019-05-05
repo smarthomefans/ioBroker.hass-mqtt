@@ -129,7 +129,9 @@ export class Domain {
         sw:                  "sw_version",
     };
 
-    public config: Record<string, string|string[]>;
+    protected iobStates: Record<string, any>;
+
+    protected config: Record<string, string|string[]>;
 
     public name: string;
 
@@ -177,10 +179,11 @@ export class Domain {
         this.handleBaseTopic();
         this.handleAbbreviations();
         this.name = "";
+        this.iobStates = {};
     }
 
     public getIobStates(): any {
-        return undefined;
+        return this.iobStates;
     }
 
     public mqttStateChange(state: string, val: string) {
@@ -188,6 +191,14 @@ export class Domain {
     }
 
     public idToState(id: string): string | undefined {
+        for (const s in this.iobStates) {
+            if (this.iobStates.hasOwnProperty(s)) {
+                const st = this.iobStates[s];
+                if (st.native && st.native.customTopic && st.native.customTopic.replace(/\//g, ".") === id) {
+                    return s;
+                }
+            }
+        }
         return undefined;
     }
 
@@ -200,7 +211,13 @@ export class Domain {
     }
 
     public stateToId(state: string): string | undefined {
-        return undefined;
+        const st = this.iobStates[state];
+        if ((typeof st === "undefined") ||
+            (typeof st.native === "undefined") ||
+            (typeof st.native.customTopic === "undefined")) {
+            return undefined;
+        }
+        return st.native.customTopic.replace(/\//g, ".");
     }
 
     public mqttPayload(state: string): any | undefined {
