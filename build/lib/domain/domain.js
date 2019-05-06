@@ -6,6 +6,7 @@ class Domain {
         this.handleBaseTopic();
         this.handleAbbreviations();
         this.name = "";
+        this.iobStates = {};
     }
     getConfigString(key) {
         if (typeof this.config[key] === "string") {
@@ -43,12 +44,20 @@ class Domain {
         }
     }
     getIobStates() {
-        return undefined;
+        return this.iobStates;
     }
     mqttStateChange(state, val) {
         return;
     }
     idToState(id) {
+        for (const s in this.iobStates) {
+            if (this.iobStates.hasOwnProperty(s)) {
+                const st = this.iobStates[s];
+                if (st.native && st.native.customTopic && st.native.customTopic.replace(/\//g, ".") === id) {
+                    return s;
+                }
+            }
+        }
         return undefined;
     }
     iobStateVal(state) {
@@ -58,7 +67,13 @@ class Domain {
         return;
     }
     stateToId(state) {
-        return undefined;
+        const st = this.iobStates[state];
+        if ((typeof st === "undefined") ||
+            (typeof st.native === "undefined") ||
+            (typeof st.native.customTopic === "undefined")) {
+            return undefined;
+        }
+        return st.native.customTopic.replace(/\//g, ".");
     }
     mqttPayload(state) {
         return undefined;

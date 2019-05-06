@@ -1,5 +1,6 @@
 import {Domain} from "./domain/domain";
 import {HaSwitch} from "./domain/switch";
+import {HaSensor} from "./domain/sensor";
 
 const supportedDomain: Record<string, any> = {
 //    "alarm_control_panel",
@@ -10,7 +11,7 @@ const supportedDomain: Record<string, any> = {
 //    "climate",
 //    "light",
 //    "lock": null,
-//    "sensor": null,
+    sensor: HaSensor,
     switch: HaSwitch,
 //    "vacuum",
 };
@@ -78,11 +79,13 @@ export class HassDevice {
 
     public get iobRole() {
         if (this.domain === "switch") return "switch";
+        if (this.domain === "sensor") return "value";
         else return "";
     }
 
     public get iobChannel() {
         if (this.domain === "switch") return "switch";
+        if (this.domain === "sensor") return "value";
         else return "";
     }
 

@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const switch_1 = require("./domain/switch");
+const sensor_1 = require("./domain/sensor");
 const supportedDomain = {
     //    "alarm_control_panel",
     //    "binary_sensor": null,
@@ -10,7 +11,7 @@ const supportedDomain = {
     //    "climate",
     //    "light",
     //    "lock": null,
-    //    "sensor": null,
+    sensor: sensor_1.HaSensor,
     switch: switch_1.HaSwitch,
 };
 class HassDevice {
@@ -60,12 +61,16 @@ class HassDevice {
     get iobRole() {
         if (this.domain === "switch")
             return "switch";
+        if (this.domain === "sensor")
+            return "value";
         else
             return "";
     }
     get iobChannel() {
         if (this.domain === "switch")
             return "switch";
+        if (this.domain === "sensor")
+            return "value";
         else
             return "";
     }

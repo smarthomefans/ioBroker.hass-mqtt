@@ -71,20 +71,6 @@ class HaSwitch extends domain_1.Domain {
             },
         };
     }
-    getIobStates() {
-        return this.iobStates;
-    }
-    idToState(id) {
-        for (const s in this.iobStates) {
-            if (this.iobStates.hasOwnProperty(s)) {
-                const st = this.iobStates[s];
-                if (st.native && st.native.customTopic && st.native.customTopic.replace(/\//g, ".") === id) {
-                    return s;
-                }
-            }
-        }
-        return undefined;
-    }
     mqttStateChange(state, val) {
         if (state === "command") {
             if (typeof val === "string") {
@@ -106,15 +92,6 @@ class HaSwitch extends domain_1.Domain {
             return this.stateTopicValue === this.stateOn;
         }
         return undefined;
-    }
-    stateToId(state) {
-        const st = this.iobStates[state];
-        if ((typeof st === "undefined") ||
-            (typeof st.native === "undefined") ||
-            (typeof st.native.customTopic === "undefined")) {
-            return undefined;
-        }
-        return st.native.customTopic.replace(/\//g, ".");
     }
     iobStateChange(state, val) {
         if (state === "command") {
