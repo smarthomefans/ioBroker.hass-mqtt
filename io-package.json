@@ -1,8 +1,20 @@
 {
     "common": {
         "name": "hass-mqtt",
-        "version": "0.0.1",
+        "version": "0.0.2",
         "news": {
+            "0.0.2": {
+                "en": "Add switch device support",
+                "de": "Unterstützung für Switch-Geräte hinzufügen",
+                "ru": "Добавить поддержку устройства коммутатора",
+                "pt": "Adicionar suporte ao dispositivo de chave",
+                "nl": "Ondersteuning voor schakelapparaten toevoegen",
+                "fr": "Ajouter un support de périphérique de commutation",
+                "it": "Aggiungi il supporto per il dispositivo di commutazione",
+                "es": "Añadir soporte de dispositivo de conmutación",
+                "pl": "Dodaj obsługę urządzenia przełączającego",
+                "zh-cn": "添加开关设备支持"
+            },
             "0.0.1": {
                 "en": "initial release",
                 "de": "Erstveröffentlichung",
