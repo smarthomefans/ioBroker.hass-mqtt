@@ -1,3 +1,4 @@
+import {renderString} from "nunjucks";
 import {Domain} from "./domain";
 
 /**
@@ -14,6 +15,7 @@ import {Domain} from "./domain";
 export class HaSensor extends Domain {
     protected stateTopic: string;
     protected stateTopicValue: string;
+    protected stateTopicValueRaw: string;
     protected valueTemplate?: string;
     protected jsonAttributesTopic?: string;
     protected jsonAttributesTopicValue?: string;
@@ -28,6 +30,7 @@ export class HaSensor extends Domain {
         this.name = this.getConfigString("name") || "MQTT Sensor";
         this.stateTopic = this.getConfigString("state_topic");
         this.stateTopicValue = "";
+        this.stateTopicValueRaw = "";
         this.valueTemplate = this.getConfigString("value_template");
         this.unitOfMeasurement = this.getConfigString("unit_of_measurement");
         this.jsonAttributesTopic = this.getConfigString("json_attributes_topic");
@@ -68,13 +71,28 @@ export class HaSensor extends Domain {
                 },
             },
         };
+        if (this.unitOfMeasurement) {
+            this.iobStates.state.common["unit"] = this.unitOfMeasurement;
+        }
     }
 
     public mqttStateChange(state: string, val: string) {
         if (state === "state") {
-            //if (typeof val === "string") {
-                this.stateTopicValue = val;
-            //}
+            if (typeof val === "string") {
+                if (typeof this.valueTemplate === "undefined" || this.valueTemplate === "") {
+                    this.stateTopicValue = val;
+                } else {
+                    try {
+                        const valueJson: Record<string, string> = {
+                            value_json: JSON.parse(val),
+                        };
+                        this.stateTopicValue = renderString(this.valueTemplate, valueJson);
+                    } catch {
+                        this.stateTopicValue = "";
+                    }
+                    this.stateTopicValueRaw = val;
+                }
+            }
         }
         return;
     }
@@ -96,7 +114,11 @@ export class HaSensor extends Domain {
 
     public mqttPayload(state: string): any | undefined {
         if (state === "state") {
-            return this.stateTopicValue;
+            if (typeof this.valueTemplate === "undefined" || this.valueTemplate === "") {
+                return this.stateTopicValue;
+            } else {
+                return this.stateTopicValueRaw;
+            }
         }
         return undefined;
     }
