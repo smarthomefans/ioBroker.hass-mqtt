@@ -119,7 +119,7 @@ class HassMqtt extends utils.Adapter {
     onStateChange(id, state) {
         if (state) {
             // The state was changed
-            this.log.info(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
+            this.log.debug(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
             if (id.indexOf(`${this.config.mqttClientInstanceID}`) === 0) {
                 // MQTT topic change, need sync to adapter's state.
                 id = id.substring(`${this.config.mqttClientInstanceID}.`.length);
