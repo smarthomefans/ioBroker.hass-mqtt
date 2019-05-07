@@ -37,7 +37,7 @@ class HassMqtt extends utils.Adapter {
             // Initialize your adapter here
             // Reset the connection indicator during startup
             this.setState("info.connection", false, true);
-            if (this.config.mqttClientInstantID === "") {
+            if (this.config.mqttClientInstanceID === "") {
                 this.log.error("Must create and locate a mqtt client instant first.");
                 return;
             }
@@ -47,13 +47,13 @@ class HassMqtt extends utils.Adapter {
             }
             // The adapters config (in the instance object everything under the attribute "native") is accessible via
             // this.config:
-            this.log.info("config mqtt client instant: " + this.config.mqttClientInstantID);
+            this.log.info("config mqtt client instant: " + this.config.mqttClientInstanceID);
             this.log.info("config homeassistant prefix: " + this.config.hassPrefix);
             // in this template all states changes inside the adapters namespace are subscribed
             this.subscribeStates("*");
-            this.subscribeForeignStates(`${this.config.mqttClientInstantID}.${this.config.hassPrefix}.*`);
-            this.subscribeForeignStates(`${this.config.mqttClientInstantID}.info.connection`);
-            this.getForeignState(`${this.config.mqttClientInstantID}.info.connection`, (err, state) => {
+            this.subscribeForeignStates(`${this.config.mqttClientInstanceID}.${this.config.hassPrefix}.*`);
+            this.subscribeForeignStates(`${this.config.mqttClientInstanceID}.info.connection`);
+            this.getForeignState(`${this.config.mqttClientInstanceID}.info.connection`, (err, state) => {
                 if (err) {
                     this.log.info(`Get mqtt connection failed. ${err}`);
                     return;
@@ -69,7 +69,7 @@ class HassMqtt extends utils.Adapter {
                     this.setState("info.connection", false, true);
                 }
             });
-            this.getForeignStates(`${this.config.mqttClientInstantID}.${this.config.hassPrefix}.*`, (err, states) => {
+            this.getForeignStates(`${this.config.mqttClientInstanceID}.${this.config.hassPrefix}.*`, (err, states) => {
                 if (err) {
                     this.log.info(`Mqtt client dose not exist homeassistant like topics.`);
                     return;
@@ -77,7 +77,7 @@ class HassMqtt extends utils.Adapter {
                 for (let s in states) {
                     if (states.hasOwnProperty(s)) {
                         const st = states[s];
-                        s = s.substring(`${this.config.mqttClientInstantID}.`.length);
+                        s = s.substring(`${this.config.mqttClientInstanceID}.`.length);
                         this.log.debug(`Read state in ready. id=${s} state=${JSON.stringify(st)}`);
                         this.handleHassMqttStates(s, st);
                     }
@@ -119,10 +119,10 @@ class HassMqtt extends utils.Adapter {
     onStateChange(id, state) {
         if (state) {
             // The state was changed
-            this.log.info(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
-            if (id.indexOf(`${this.config.mqttClientInstantID}`) === 0) {
+            this.log.debug(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
+            if (id.indexOf(`${this.config.mqttClientInstanceID}`) === 0) {
                 // MQTT topic change, need sync to adapter's state.
-                id = id.substring(`${this.config.mqttClientInstantID}.`.length);
+                id = id.substring(`${this.config.mqttClientInstanceID}.`.length);
                 if (id === `info.connection`) {
                     if (state.val) {
                         this.setState("info.connection", true, true);
@@ -150,8 +150,8 @@ class HassMqtt extends utils.Adapter {
         else {
             // The state was deleted
             this.log.info(`state ${id} deleted`);
-            if (id.indexOf(`${this.config.mqttClientInstantID}`) === 0) {
-                id = id.substring(`${this.config.mqttClientInstantID}.`.length);
+            if (id.indexOf(`${this.config.mqttClientInstanceID}`) === 0) {
+                id = id.substring(`${this.config.mqttClientInstanceID}.`.length);
                 if (id === `info.connection`) {
                     this.setState("info.connection", false, true);
                 }
@@ -163,11 +163,11 @@ class HassMqtt extends utils.Adapter {
     }
     _addDevSyncStateFromMqtt(dev, topic, sID, callback) {
         const topicID = topic.replace(/\//g, ".");
-        this.getForeignObject(`${this.config.mqttClientInstantID}.${topicID}`, (_, oObj) => {
+        this.getForeignObject(`${this.config.mqttClientInstanceID}.${topicID}`, (_, oObj) => {
             if (!oObj) {
                 // MQTT topic never be received. Create object first.
                 oObj = {
-                    _id: `${this.config.mqttClientInstantID}.${topicID}`,
+                    _id: `${this.config.mqttClientInstanceID}.${topicID}`,
                     common: {
                         name: topic,
                         write: true,
@@ -182,11 +182,11 @@ class HassMqtt extends utils.Adapter {
                     },
                     type: "state",
                 };
-                this.setForeignObject(`${this.config.mqttClientInstantID}.${topicID}`, oObj, true);
+                this.setForeignObject(`${this.config.mqttClientInstanceID}.${topicID}`, oObj, true);
             }
             else {
                 // MQTT topic exist. Sync topic value
-                this.getForeignState(`${this.config.mqttClientInstantID}.${topicID}`, (_, mqttState) => {
+                this.getForeignState(`${this.config.mqttClientInstanceID}.${topicID}`, (_, mqttState) => {
                     if (!mqttState) {
                         this.log.info(`Custom topic(${topic}) not ready yet.`);
                         return;
@@ -219,7 +219,7 @@ class HassMqtt extends utils.Adapter {
                     else if (state.native && state.native.customTopic) {
                         this._addDevSyncStateFromMqtt(dev, state.native.customTopic, obj.id, (topicID) => {
                             this.mqttId2device[topicID] = dev;
-                            this.subscribeForeignStates(`${this.config.mqttClientInstantID}.${topicID}`);
+                            this.subscribeForeignStates(`${this.config.mqttClientInstanceID}.${topicID}`);
                         });
                     }
                     callback();
@@ -234,7 +234,7 @@ class HassMqtt extends utils.Adapter {
                     else if (state.native && state.native.customTopic) {
                         this._addDevSyncStateFromMqtt(dev, state.native.customTopic, obj.id, (topicID) => {
                             this.mqttId2device[topicID] = dev;
-                            this.subscribeForeignStates(`${this.config.mqttClientInstantID}.${topicID}`);
+                            this.subscribeForeignStates(`${this.config.mqttClientInstanceID}.${topicID}`);
                         });
                     }
                     callback();
@@ -371,7 +371,7 @@ class HassMqtt extends utils.Adapter {
                     this.log.error(`Set ioBroker state change failed. ${err}`);
                     return;
                 }
-                this.setForeignState(`${this.config.mqttClientInstantID}.${mqttID}`, mqttVal, false);
+                this.setForeignState(`${this.config.mqttClientInstanceID}.${mqttID}`, mqttVal, false);
                 this.setState(id, { ack: true });
             });
         }
