@@ -1,8 +1,20 @@
 {
     "common": {
         "name": "hass-mqtt",
-        "version": "0.0.2",
+        "version": "0.0.3",
         "news": {
+            "0.0.3": {
+                "en": "Update admin page",
+                "de": "Aktualisieren Sie die Admin-Seite",
+                "ru": "Обновить страницу администратора",
+                "pt": "Atualizar a página de administração",
+                "nl": "Update beheerderspagina",
+                "fr": "Mettre à jour la page d'administration",
+                "it": "Aggiorna la pagina di amministrazione",
+                "es": "Actualizar la página de administrador",
+                "pl": "Aktualizacja strony administracyjnej",
+                "zh-cn": "更新管理页面"
+            },
             "0.0.2": {
                 "en": "Add switch device support",
                 "de": "Unterstützung für Switch-Geräte hinzufügen",

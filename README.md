@@ -18,6 +18,9 @@ This adapter can discover devices followed hass mqtt discover protocol
 
 ## Changelog
 
+### 0.0.3
+* (SchumyHao) Update admin page
+
 ### 0.0.2
 * (SchumyHao) Add switch device support
 
