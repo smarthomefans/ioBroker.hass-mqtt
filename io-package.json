@@ -1,8 +1,20 @@
 {
     "common": {
         "name": "hass-mqtt",
-        "version": "0.0.3",
+        "version": "0.0.4",
         "news": {
+            "0.0.4": {
+                "en": "select mqtt instance, not type it name",
+                "de": "Wählen Sie die mqtt-Instanz aus, und geben Sie keinen Namen ein",
+                "ru": "выберите экземпляр mqtt, а не введите его имя",
+                "pt": "selecione mqtt instance, não digite seu nome",
+                "nl": "selecteer mqtt instance, typ de naam niet",
+                "fr": "sélectionnez l'instance mqtt, ne tapez pas le nom",
+                "it": "selezionare istanza mqtt, non digitare il nome",
+                "es": "seleccione la instancia mqtt, no escriba su nombre",
+                "pl": "wybierz instancję mqtt, a nie wpisz jej nazwę",
+                "zh-cn": "选择mqtt实例，而不是键入它的名称"
+            },
             "0.0.3": {
                 "en": "Update admin page",
                 "de": "Aktualisieren Sie die Admin-Seite",

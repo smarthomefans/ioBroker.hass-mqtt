@@ -87,6 +87,8 @@ Confinguration like this
 ![](doc/img/zh-cn/broker_mqtt.png)
 
 ## Changelog
+### 0.0.4 (2019-05-18)
+* select mqtt instance, not type it name
 
 ### 0.0.3
 * (SchumyHao) Update admin page
