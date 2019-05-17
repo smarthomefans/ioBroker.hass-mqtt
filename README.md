@@ -87,6 +87,9 @@ Confinguration like this
 ![](doc/img/zh-cn/broker_mqtt.png)
 
 ## Changelog
+### 0.0.5 (2019-05-18)
+* update npm
+
 ### 0.0.4 (2019-05-18)
 * select mqtt instance, not type it name
 

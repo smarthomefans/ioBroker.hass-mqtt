@@ -1,8 +1,20 @@
 {
     "common": {
         "name": "hass-mqtt",
-        "version": "0.0.4",
+        "version": "0.0.5",
         "news": {
+            "0.0.5": {
+                "en": "update npm",
+                "de": "update npm",
+                "ru": "обновить нпм",
+                "pt": "atualizar npm",
+                "nl": "update npm",
+                "fr": "mettre à jour npm",
+                "it": "aggiornare npm",
+                "es": "actualizar npm",
+                "pl": "zaktualizuj npm",
+                "zh-cn": "更新npm"
+            },
             "0.0.4": {
                 "en": "select mqtt instance, not type it name",
                 "de": "Wählen Sie die mqtt-Instanz aus, und geben Sie keinen Namen ein",
