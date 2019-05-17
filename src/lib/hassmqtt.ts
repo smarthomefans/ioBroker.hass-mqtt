@@ -131,7 +131,7 @@ export class HassDevice {
         const state = match[match.length - 1];
         const mqttID = this._instant.stateToId(state);
         if (typeof mqttID === "undefined") {
-            callback(`No need to publish state: ${state}`);
+            callback("NO NEED");
             return;
         }
 
