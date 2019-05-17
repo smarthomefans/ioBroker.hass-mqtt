@@ -365,7 +365,7 @@ class HassMqtt extends utils.Adapter {
             const dev = this.stateId2device[id];
             dev.iobStateChange(id, state.val, (err, mqttID, mqttVal) => {
                 if (err) {
-                    if (err === "NO CHANGE") {
+                    if ((err === "NO CHANGE") || (err === "NO NEED")) {
                         return;
                     }
                     this.log.error(`Set ioBroker state change failed. ${err}`);

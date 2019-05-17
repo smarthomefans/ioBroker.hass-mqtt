@@ -30,3 +30,6 @@ admin/i18n
 
 # maintenance scripts
 maintenance/**
+
+.github/*
+installToib.sh
