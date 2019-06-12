@@ -66,14 +66,14 @@ class Domain {
     iobStateChange(state, val) {
         return;
     }
-    stateToId(state) {
+    stateToTopic(state) {
         const st = this.iobStates[state];
         if ((typeof st === "undefined") ||
             (typeof st.native === "undefined") ||
             (typeof st.native.customTopic === "undefined")) {
             return undefined;
         }
-        return st.native.customTopic.replace(/\//g, ".");
+        return st.native.customTopic;
     }
     mqttPayload(state) {
         return undefined;

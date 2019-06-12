@@ -41,7 +41,6 @@ class HassMqtt extends utils.Adapter {
     private mqttId2device: Record<string, HassDevice> = {};
     private stateId2device: Record<string, HassDevice> = {};
     private channelId2device: Record<string, HassDevice> = {};
-    private deviceId2device: Record<string, HassDevice> = {};
 
     /**
      * Is called when databases are connected and adapter received configuration.
@@ -154,6 +153,7 @@ class HassMqtt extends utils.Adapter {
                 }
             } else if (id.indexOf(`${this.namespace}`) === 0) {
                 // Adapter's state change, need send payload to MQTT topic.
+                if (state.ack) return;
                 id = id.substring(`${this.namespace}.`.length);
                 this.handleSelfStateChange(id, state);
             } else {
@@ -176,26 +176,7 @@ class HassMqtt extends utils.Adapter {
     private _addDevSyncStateFromMqtt(dev: HassDevice, topic: string, sID: string, callback: (id: string) => void) {
         const topicID = topic.replace(/\//g, ".");
         this.getForeignObject(`${this.config.mqttClientInstanceID}.${topicID}`, (_, oObj) => {
-            if (!oObj) {
-                // MQTT topic never be received. Create object first.
-                oObj = {
-                    _id: `${this.config.mqttClientInstanceID}.${topicID}`,
-                    common: {
-                        name: topic,
-                        write: true,
-                        read: true,
-                        role: "variable",
-                        desc: "mqtt client variable",
-                        // TODO: fix boolean.
-                        type: "boolean",
-                    },
-                    native: {
-                        topic: topic,
-                    },
-                    type: "state",
-                };
-                this.setForeignObject(`${this.config.mqttClientInstanceID}.${topicID}`, oObj, true);
-            } else {
+            if (oObj) {
                 // MQTT topic exist. Sync topic value
                 this.getForeignState(`${this.config.mqttClientInstanceID}.${topicID}`, (_, mqttState) => {
                     if (!mqttState) {
@@ -215,8 +196,8 @@ class HassMqtt extends utils.Adapter {
                     });
                 });
             }
-            callback(topicID);
         });
+        callback(topicID);
     }
 
     // TODO: fix state any.
@@ -374,7 +355,7 @@ class HassMqtt extends utils.Adapter {
     private handleSelfStateChange(id: string, state: ioBroker.State) {
         if (typeof this.stateId2device[id] !== "undefined") {
             const dev = this.stateId2device[id];
-            dev.iobStateChange(id, state.val, (err, mqttID, mqttVal) => {
+            dev.iobStateChange(id, state.val, (err, mqttTopic, mqttVal) => {
                 if (err) {
                     if ((err === "NO CHANGE") || (err === "NO NEED")) {
                         return;
@@ -382,7 +363,8 @@ class HassMqtt extends utils.Adapter {
                     this.log.error(`Set ioBroker state change failed. ${err}`);
                     return;
                 }
-                this.setForeignState(`${this.config.mqttClientInstanceID}.${mqttID}`, mqttVal, false);
+                this.sendTo(this.config.mqttClientInstanceID, "sendMessage2Client",
+                    {topic: mqttTopic, message: mqttVal});
                 this.setState(id, {ack: true});
             });
         }

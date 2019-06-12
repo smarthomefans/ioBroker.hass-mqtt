@@ -210,14 +210,14 @@ export class Domain {
         return;
     }
 
-    public stateToId(state: string): string | undefined {
+    public stateToTopic(state: string): string | undefined {
         const st = this.iobStates[state];
         if ((typeof st === "undefined") ||
             (typeof st.native === "undefined") ||
             (typeof st.native.customTopic === "undefined")) {
             return undefined;
         }
-        return st.native.customTopic.replace(/\//g, ".");
+        return st.native.customTopic;
     }
 
     public mqttPayload(state: string): any | undefined {

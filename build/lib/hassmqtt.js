@@ -113,15 +113,15 @@ class HassDevice {
             return;
         }
         const state = match[match.length - 1];
-        const mqttID = this._instant.stateToId(state);
-        if (typeof mqttID === "undefined") {
+        const mqttTopic = this._instant.stateToTopic(state);
+        if (typeof mqttTopic === "undefined") {
             callback("NO NEED");
             return;
         }
         const oldVal = this._instant.iobStateVal(state);
         if (val !== oldVal) {
             this._instant.iobStateChange(state, val);
-            callback(null, mqttID, this._instant.mqttPayload(state));
+            callback(null, mqttTopic, this._instant.mqttPayload(state));
         }
         else {
             callback("NO CHANGE");
