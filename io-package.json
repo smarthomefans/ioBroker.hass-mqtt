@@ -1,8 +1,20 @@
 {
     "common": {
         "name": "hass-mqtt",
-        "version": "0.0.5",
+        "version": "0.0.6",
         "news": {
+            "0.0.6": {
+                "en": "fix event storm issue",
+                "de": "Fix Event Storm Problem",
+                "ru": "исправить проблему шторма",
+                "pt": "corrija a questão da tempestade de eventos",
+                "nl": "fix event storm probleem",
+                "fr": "correction d'un problème de tempête",
+                "it": "risolvere il problema della tempesta di eventi",
+                "es": "arreglar el problema tormenta de eventos",
+                "pl": "napraw problem z burzą zdarzeń",
+                "zh-cn": "修复事件风暴问题"
+            },
             "0.0.5": {
                 "en": "update npm",
                 "de": "update npm",
