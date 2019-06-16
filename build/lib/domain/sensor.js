@@ -17,21 +17,15 @@ class HaSensor extends domain_1.Domain {
         super(config);
         this.name = this.getConfigString("name") || "MQTT Sensor";
         this.stateTopic = this.getConfigString("state_topic");
-        this.stateTopicValue = "";
-        this.stateTopicValueRaw = "";
         this.valueTemplate = this.getConfigString("value_template");
         this.unitOfMeasurement = this.getConfigString("unit_of_measurement");
         this.jsonAttributesTopic = this.getConfigString("json_attributes_topic");
-        if (this.jsonAttributesTopic !== "") {
-            this.jsonAttributesTopicValue = "";
-        }
         this.availabilityTopic = this.getConfigString("availability_topic");
         if (this.availabilityTopic !== "") {
             this.payloadAvailable = this.getConfigString("payload_available") || "online";
             this.payloadNotAvailable = this.getConfigString("payload_not_available") || "offline";
-            this.availabilityTopicValue = this.payloadAvailable;
         }
-        this.iobStates = {
+        this._iobStates = {
             name: {
                 type: "state",
                 common: {
@@ -62,52 +56,42 @@ class HaSensor extends domain_1.Domain {
         if (this.unitOfMeasurement) {
             this.iobStates.state.common["unit"] = this.unitOfMeasurement;
         }
+        this._mqttPayloadCatch = {
+            state: "",
+        };
     }
-    mqttStateChange(state, val) {
-        if (state === "state") {
-            if (typeof val === "string") {
-                if (typeof this.valueTemplate === "undefined" || this.valueTemplate === "") {
-                    this.stateTopicValue = val;
+    /**
+     * Update readable state mqtt payload catch.
+     * callback will update ioBroker readable state value.
+     * @param stateID readable state ID
+     * @param mqttPayload new mqtt payload got from mqtt broker
+     * @param callback return new ioBroker state value
+     */
+    mqttStateChange(stateID, mqttPayload, callback) {
+        if (stateID === "state") {
+            if (typeof this.valueTemplate === "undefined" || this.valueTemplate === "") {
+                if (typeof this._mqttPayloadCatch.state === "string") {
+                    this._mqttPayloadCatch.state = mqttPayload;
                 }
-                else {
-                    try {
-                        const valueJson = {
-                            value_json: JSON.parse(val),
-                        };
-                        this.stateTopicValue = nunjucks_1.renderString(this.valueTemplate, valueJson);
+                callback(mqttPayload);
+            }
+            else {
+                try {
+                    const valueJson = {
+                        value_json: JSON.parse(mqttPayload),
+                    };
+                    const val = nunjucks_1.renderString(this.valueTemplate, valueJson);
+                    if (typeof this._mqttPayloadCatch.state === "string") {
+                        this._mqttPayloadCatch.state = mqttPayload;
                     }
-                    catch (_a) {
-                        this.stateTopicValue = "";
-                    }
-                    this.stateTopicValueRaw = val;
+                    callback(val);
+                }
+                catch (_a) {
+                    return;
                 }
             }
         }
         return;
-    }
-    iobStateVal(state) {
-        if (state === "state") {
-            return this.stateTopicValue;
-        }
-        return undefined;
-    }
-    iobStateChange(state, val) {
-        if (state === "state") {
-            if (typeof val === "string") {
-                this.stateTopicValue = val;
-            }
-        }
-    }
-    mqttPayload(state) {
-        if (state === "state") {
-            if (typeof this.valueTemplate === "undefined" || this.valueTemplate === "") {
-                return this.stateTopicValue;
-            }
-            else {
-                return this.stateTopicValueRaw;
-            }
-        }
-        return undefined;
     }
 }
 exports.HaSensor = HaSensor;

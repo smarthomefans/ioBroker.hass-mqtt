@@ -17,18 +17,15 @@ class HaSwitch extends domain_1.Domain {
         this.commandTopic = this.getConfigString("command_topic");
         this.payloadOn = this.getConfigString("payload_on") || "ON";
         this.payloadOff = this.getConfigString("payload_off") || "OFF";
-        this.commandTopicValue = this.payloadOff;
         this.stateTopic = this.getConfigString("state_topic");
         this.stateOn = this.getConfigString("state_on") || this.payloadOn || "ON";
         this.stateOff = this.getConfigString("state_off") || this.payloadOff || "OFF";
-        this.stateTopicValue = this.stateOff;
         this.availabilityTopic = this.getConfigString("availability_topic");
         if (this.availabilityTopic !== "") {
             this.payloadAvailable = this.getConfigString("payload_available") || "online";
             this.payloadNotAvailable = this.getConfigString("payload_not_available") || "offline";
-            this.availabilityTopicValue = this.payloadAvailable;
         }
-        this.iobStates = {
+        this._iobStates = {
             name: {
                 type: "state",
                 common: {
@@ -62,67 +59,70 @@ class HaSwitch extends domain_1.Domain {
                     name: "command",
                     type: "boolean",
                     desc: "Set switch state",
-                    read: false,
+                    read: true,
                     write: true,
                 },
                 native: {
-                    customTopic: this.commandTopic,
+                    customTopic: {
+                        w: this.commandTopic,
+                        r: this.stateTopic,
+                    },
                 },
             },
         };
+        this._mqttPayloadCatch = {
+            state: "",
+            command: {
+                w: "",
+                r: "",
+            },
+        };
     }
-    mqttStateChange(state, val) {
-        if (state === "command") {
-            if (typeof val === "string") {
-                this.commandTopicValue = val;
+    /**
+     * Update readable state mqtt payload catch.
+     * callback will update ioBroker readable state value.
+     * @param stateID readable state ID
+     * @param mqttPayload new mqtt payload got from mqtt broker
+     * @param callback return new ioBroker state value
+     */
+    mqttStateChange(stateID, mqttPayload, callback) {
+        if (stateID === "command") {
+            if ((mqttPayload === this.stateOn) || (mqttPayload === this.stateOff)) {
+                if (typeof this._mqttPayloadCatch.command === "object") {
+                    this._mqttPayloadCatch.command.r = mqttPayload;
+                    callback(mqttPayload === this.stateOn);
+                }
             }
         }
-        else if (state === "state") {
-            if (typeof val === "string") {
-                this.stateTopicValue = val;
+        else if (stateID === "state") {
+            if ((mqttPayload === this.stateOn) || (mqttPayload === this.stateOff)) {
+                if (typeof this._mqttPayloadCatch.state === "string") {
+                    this._mqttPayloadCatch.state = mqttPayload;
+                    callback(mqttPayload === this.stateOn);
+                }
             }
         }
         return;
     }
-    iobStateVal(state) {
-        if (state === "command") {
-            return this.commandTopicValue === this.payloadOn;
-        }
-        else if (state === "state") {
-            return this.stateTopicValue === this.stateOn;
-        }
-        return undefined;
-    }
-    iobStateChange(state, val) {
-        if (state === "command") {
-            if (typeof val === "boolean") {
+    /**
+     * ioBroker writeable state change, need send mqtt message to broker
+     * @param stateID ioBroker state name
+     * @param val new state value
+     * @param callback return new mqtt payload, need send to broker
+     */
+    iobStateChange(stateID, val, callback) {
+        if (stateID === "command") {
+            if ((typeof val === "boolean") && (typeof this._mqttPayloadCatch.command === "object")) {
                 if (val) {
-                    this.commandTopicValue = this.payloadOn;
+                    this._mqttPayloadCatch.command.w = this.payloadOn;
+                    callback(this.payloadOn);
                 }
                 else {
-                    this.commandTopicValue = this.payloadOff;
+                    this._mqttPayloadCatch.command.w = this.payloadOff;
+                    callback(this.payloadOff);
                 }
             }
         }
-        else if (state === "state") {
-            if (typeof val === "boolean") {
-                if (val) {
-                    this.stateTopicValue = this.stateOn;
-                }
-                else {
-                    this.stateTopicValue = this.stateOff;
-                }
-            }
-        }
-    }
-    mqttPayload(state) {
-        if (state === "command") {
-            return this.commandTopicValue;
-        }
-        else if (state === "state") {
-            return this.stateTopicValue;
-        }
-        return undefined;
     }
 }
 exports.HaSwitch = HaSwitch;

@@ -10,18 +10,15 @@ import {Domain} from "./domain";
  *  json_attributes_topic
  */
 export class HaSwitch extends Domain {
-    protected commandTopic: string;
-    protected payloadOn: string;
-    protected payloadOff: string;
-    protected commandTopicValue: string;
-    protected stateTopic: string;
-    protected stateOn: string;
-    protected stateOff: string;
-    protected stateTopicValue: string;
-    protected availabilityTopic?: string;
-    protected payloadAvailable?: string;
-    protected payloadNotAvailable?: string;
-    protected availabilityTopicValue?: string;
+    private commandTopic: string;
+    private payloadOn: string;
+    private payloadOff: string;
+    private stateTopic: string;
+    private stateOn: string;
+    private stateOff: string;
+    private availabilityTopic?: string;
+    private payloadAvailable?: string;
+    private payloadNotAvailable?: string;
 
     constructor(config: string) {
         super(config);
@@ -29,18 +26,15 @@ export class HaSwitch extends Domain {
         this.commandTopic = this.getConfigString("command_topic");
         this.payloadOn = this.getConfigString("payload_on") || "ON";
         this.payloadOff = this.getConfigString("payload_off") || "OFF";
-        this.commandTopicValue = this.payloadOff;
         this.stateTopic = this.getConfigString("state_topic");
         this.stateOn = this.getConfigString("state_on") || this.payloadOn || "ON";
         this.stateOff = this.getConfigString("state_off") || this.payloadOff || "OFF";
-        this.stateTopicValue = this.stateOff;
         this.availabilityTopic = this.getConfigString("availability_topic");
         if (this.availabilityTopic !== "") {
             this.payloadAvailable = this.getConfigString("payload_available") || "online";
             this.payloadNotAvailable = this.getConfigString("payload_not_available") || "offline";
-            this.availabilityTopicValue = this.payloadAvailable;
         }
-        this.iobStates = {
+        this._iobStates = {
             name: {
                 type: "state",
                 common: {
@@ -74,64 +68,69 @@ export class HaSwitch extends Domain {
                     name: "command",
                     type: "boolean",
                     desc: "Set switch state",
-                    read: false,
+                    read: true,
                     write: true,
                 },
                 native: {
-                    customTopic: this.commandTopic,
+                    customTopic: {
+                        w: this.commandTopic,
+                        r: this.stateTopic,
+                    },
                 },
+            },
+        };
+        this._mqttPayloadCatch = {
+            state: "",
+            command: {
+                w: "",
+                r: "",
             },
         };
     }
 
-    public mqttStateChange(state: string, val: string) {
-        if (state === "command") {
-            if (typeof val === "string") {
-                this.commandTopicValue = val;
+    /**
+     * Update readable state mqtt payload catch.
+     * callback will update ioBroker readable state value.
+     * @param stateID readable state ID
+     * @param mqttPayload new mqtt payload got from mqtt broker
+     * @param callback return new ioBroker state value
+     */
+    public mqttStateChange(stateID: string, mqttPayload: string, callback: (iobVal: any) => void) {
+        if (stateID === "command") {
+            if ((mqttPayload === this.stateOn) || (mqttPayload === this.stateOff)) {
+                if (typeof this._mqttPayloadCatch.command === "object") {
+                    this._mqttPayloadCatch.command.r = mqttPayload;
+                    callback(mqttPayload === this.stateOn);
+                }
             }
-        } else if (state === "state") {
-            if (typeof val === "string") {
-                this.stateTopicValue = val;
+        } else if (stateID === "state") {
+            if ((mqttPayload === this.stateOn) || (mqttPayload === this.stateOff)) {
+                if (typeof this._mqttPayloadCatch.state === "string") {
+                    this._mqttPayloadCatch.state = mqttPayload;
+                    callback(mqttPayload === this.stateOn);
+                }
             }
         }
         return;
     }
 
-    public iobStateVal(state: string): any | undefined {
-        if (state === "command") {
-            return this.commandTopicValue === this.payloadOn;
-        } else if (state === "state") {
-            return this.stateTopicValue === this.stateOn;
-        }
-        return undefined;
-    }
-
-    public iobStateChange(state: string, val: any) {
-        if (state === "command") {
-            if (typeof val === "boolean") {
+    /**
+     * ioBroker writeable state change, need send mqtt message to broker
+     * @param stateID ioBroker state name
+     * @param val new state value
+     * @param callback return new mqtt payload, need send to broker
+     */
+    public iobStateChange(stateID: string, val: any, callback: (mqttPayload: string) => void) {
+        if (stateID === "command") {
+            if ((typeof val === "boolean") && (typeof this._mqttPayloadCatch.command === "object")) {
                 if (val) {
-                    this.commandTopicValue = this.payloadOn;
+                    this._mqttPayloadCatch.command.w = this.payloadOn;
+                    callback(this.payloadOn);
                 } else {
-                    this.commandTopicValue = this.payloadOff;
-                }
-            }
-        } else if (state === "state") {
-            if (typeof val === "boolean") {
-                if (val) {
-                    this.stateTopicValue = this.stateOn;
-                } else {
-                    this.stateTopicValue = this.stateOff;
+                    this._mqttPayloadCatch.command.w = this.payloadOff;
+                    callback(this.payloadOff);
                 }
             }
         }
-    }
-
-    public mqttPayload(state: string): any | undefined {
-        if (state === "command") {
-            return this.commandTopicValue;
-        } else if (state === "state") {
-            return this.stateTopicValue;
-        }
-        return undefined;
     }
 }
