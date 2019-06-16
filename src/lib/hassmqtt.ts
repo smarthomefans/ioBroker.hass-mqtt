@@ -1,6 +1,6 @@
 import {Domain} from "./domain/domain";
-import {HaSwitch} from "./domain/switch";
 import {HaSensor} from "./domain/sensor";
+import {HaSwitch} from "./domain/switch";
 
 const supportedDomain: Record<string, any> = {
 //    "alarm_control_panel",
@@ -74,7 +74,7 @@ export class HassDevice {
         if (typeof this._instant === "undefined") {
             return {};
         }
-        return this._instant.getIobStates();
+        return this._instant.iobStates;
     }
 
     public get iobRole() {
@@ -94,7 +94,7 @@ export class HassDevice {
     }
 
     /**
-     * 
+     * Read mqtt message from broker. Update the ioBroker READABLE state
      * @param id MQTT Topic
      * @param val MQTT Topic Value
      * @param callback update object value
@@ -104,20 +104,26 @@ export class HassDevice {
             callback("Uninitialized device");
             return;
         }
-        const state = this._instant.idToState(id);
-        if (typeof state === "undefined") {
-            callback(`Can not find state matched this ID ${id}`);
-            return;
-        }
-        const oldVal = this._instant.mqttPayload(state);
-        if (val !== oldVal) {
-            this._instant.mqttStateChange(state, val);
-            callback(null, state, this._instant.iobStateVal(state));
-        } else {
-            callback("NO CHANGE");
+        // One topic ID may mapped to multiple states
+        const states = this._instant.idToReadableStates(id);
+        for (const state of states) {
+            const oldVal = this._instant.getReadableStateMqttPayload(state);
+            if (val !== oldVal) {
+                this._instant.mqttStateChange(state, val, (iobVal: any) => {
+                    callback(null, state, iobVal);
+                });
+            } else {
+                callback("NO CHANGE");
+            }
         }
     }
 
+    /**
+     * Read ioBroker WRITEABLE state change message, Write to mqtt broker
+     * @param id ioBroker state id
+     * @param val ioBroker state value
+     * @param callback send mqtt message
+     */
     public iobStateChange(id: string, val: any, callback: (err: string | null, mqttTopic?: string, mqttVal?: any) => void) {
         if (typeof this._instant === "undefined") {
             callback("Uninitialized device");
@@ -129,18 +135,14 @@ export class HassDevice {
             return;
         }
         const state = match[match.length - 1];
-        const mqttTopic = this._instant.stateToTopic(state);
-        if (typeof mqttTopic === "undefined") {
+        const mqttTopic = this._instant.writeableStateToTopic(state);
+        if (mqttTopic === "") {
             callback("NO NEED");
             return;
         }
 
-        const oldVal = this._instant.iobStateVal(state);
-        if (val !== oldVal) {
-            this._instant.iobStateChange(state, val);
-            callback(null, mqttTopic, this._instant.mqttPayload(state));
-        } else {
-            callback("NO CHANGE");
-        }
+        this._instant.iobStateChange(state, val, (mqttPayload: string) => {
+            callback(null, mqttTopic, mqttPayload);
+        });
     }
 }

@@ -1,6 +1,7 @@
+type domainConfigValue = string | number | boolean;
 
 export class Domain {
-    private static abbreviations: Record<string, string> = {
+    private static _abbreviations: Record<string, string> = {
         aux_cmd_t:           "aux_command_topic",
         aux_stat_tpl:        "aux_state_template",
         aux_stat_t:          "aux_state_topic",
@@ -129,15 +130,21 @@ export class Domain {
         sw:                  "sw_version",
     };
 
-    protected iobStates: Record<string, any>;
+    protected _iobStates: Record<string, any> = {};
 
-    protected config: Record<string, string|string[]>;
+    protected _config: Record<string, domainConfigValue>;
 
-    public name: string;
+    protected _mqttPayloadCatch: Record<string, (string|{w: string, r: string})> = {};
 
-    public getConfigString(key: string) {
-        if (typeof this.config[key] === "string") {
-            return this.config[key].toString();
+    public name: string = "";
+
+    /**
+     * Get key value in config. Only if value is string.
+     * @param key config key
+     */
+    protected getConfigString(key: string) {
+        if (typeof this._config[key] === "string") {
+            return this._config[key].toString();
         }
         return "";
     }
@@ -148,13 +155,13 @@ export class Domain {
 
     private handleBaseTopic() {
         if (this.baseTopic !== "") {
-            for (const k in this.config) {
-                if (this.config.hasOwnProperty(k)) {
-                    const v = this.config[k];
+            for (const k in this._config) {
+                if (this._config.hasOwnProperty(k)) {
+                    const v = this._config[k];
                     if (typeof v === "string") {
                         if (v.indexOf("~") >= 0) {
                             v.replace("~", this.baseTopic);
-                            this.config[k] = v;
+                            this._config[k] = v;
                         }
                     }
                 }
@@ -163,65 +170,127 @@ export class Domain {
     }
 
     private handleAbbreviations() {
-        for (const k in this.config) {
-            if (this.config.hasOwnProperty(k)) {
-                const v = this.config[k];
-                if (Domain.abbreviations[k]) {
-                    this.config[Domain.abbreviations[k]] = v;
-                    delete this.config[k];
+        for (const k in this._config) {
+            if (this._config.hasOwnProperty(k)) {
+                const v = this._config[k];
+                if (Domain._abbreviations[k]) {
+                    this._config[Domain._abbreviations[k]] = v;
+                    delete this._config[k];
                 }
             }
         }
+    }
+
+    protected getStateReadTopic(sKay: string): string {
+        const st = this._iobStates[sKay];
+        if (st.common.read && st.native && st.native.customTopic) {
+            if (typeof st.native.customTopic === "object") {
+                return st.native.customTopic.r;
+            } else {
+                return st.native.customTopic;
+            }
+        }
+        return "";
+    }
+
+    protected getStateWriteTopic(sKay: string): string {
+        const st = this._iobStates[sKay];
+        if (st.common.write && st.native && st.native.customTopic) {
+            if (typeof st.native.customTopic === "object") {
+                return st.native.customTopic.w;
+            } else {
+                return st.native.customTopic;
+            }
+        }
+        return "";
     }
 
     constructor(config: string) {
-        this.config = JSON.parse(config);
+        this._config = JSON.parse(config);
         this.handleBaseTopic();
         this.handleAbbreviations();
-        this.name = "";
-        this.iobStates = {};
     }
 
-    public getIobStates(): any {
-        return this.iobStates;
+    public get iobStates(): any {
+        return this._iobStates;
     }
 
-    public mqttStateChange(state: string, val: string) {
-        return;
-    }
-
-    public idToState(id: string): string | undefined {
-        for (const s in this.iobStates) {
-            if (this.iobStates.hasOwnProperty(s)) {
-                const st = this.iobStates[s];
-                if (st.native && st.native.customTopic && st.native.customTopic.replace(/\//g, ".") === id) {
-                    return s;
-                }
+    /**
+     * get ioBroker states from mqtt id.
+     * If ioBroker state contains different read and write topic.
+     * compare read topic.
+     * @param id mqttID
+     */
+    public idToReadableStates(id: string): string[] {
+        const states = [];
+        for (const s in this._iobStates) {
+            if (this._iobStates.hasOwnProperty(s)) {
+                if (this.getStateReadTopic(s).replace(/\//g, ".") === id) states.push(s);
             }
         }
-        return undefined;
+        return states;
     }
 
-    public iobStateVal(state: string): any | undefined {
-        return undefined;
+    /**
+     * Get readable state mqtt payload catch.
+     * @param state readable state ID
+     */
+    public getReadableStateMqttPayload(state: string): string {
+        const payload = this._mqttPayloadCatch[state];
+        if (payload) {
+            if (typeof payload === "string") {
+                return payload;
+            } else {
+                return payload.r;
+            }
+        }
+        return "";
     }
 
-    public iobStateChange(state: string, val: any) {
+    /**
+     * Update readable state mqtt payload catch.
+     * callback will update ioBroker readable state value.
+     * @param stateID readable state ID
+     * @param mqttPayload new mqtt payload got from mqtt broker
+     * @param callback return new ioBroker state value
+     */
+    public mqttStateChange(stateID: string, mqttPayload: string, callback: (iobVal: any) => void) {
         return;
     }
 
-    public stateToTopic(state: string): string | undefined {
-        const st = this.iobStates[state];
-        if ((typeof st === "undefined") ||
-            (typeof st.native === "undefined") ||
-            (typeof st.native.customTopic === "undefined")) {
-            return undefined;
-        }
-        return st.native.customTopic;
+    /**
+     * Writeable state to MQTT topic. This is only called when writeable state changed
+     * in ioBroker system.
+     * @param state Writeable state
+     */
+    public writeableStateToTopic(wState: string): string {
+        return this.getStateWriteTopic(wState);
     }
 
-    public mqttPayload(state: string): any | undefined {
-        return undefined;
+    /**
+     * Get writeable state mqtt payload catch.
+     * @param state readable state ID
+     */
+    public getWriteableStateMqttPayload(state: string): string {
+        const payload = this._mqttPayloadCatch[state];
+        if (payload) {
+            if (typeof payload === "string") {
+                return payload;
+            } else {
+                return payload.w;
+            }
+        }
+        return "";
+    }
+
+    /**
+     * ioBroker writeable state change, need send mqtt message to broker
+     * @param stateID ioBroker state name
+     * @param val new state value
+     * @param callback return new mqtt payload, need send to broker
+     */
+    public iobStateChange(stateID: string, val: any, callback: (mqttPayload: string) => void) {
+        return;
     }
 /**
  * device
