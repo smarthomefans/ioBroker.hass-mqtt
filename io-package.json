@@ -1,8 +1,20 @@
 {
     "common": {
         "name": "hass-mqtt",
-        "version": "0.0.6",
+        "version": "0.0.7",
         "news": {
+            "0.0.7": {
+                "en": "Fix multi map issue",
+                "de": "Behebung eines Problems mit mehreren Karten",
+                "ru": "Исправить проблему с несколькими картами",
+                "pt": "Corrigir problema de vários mapas",
+                "nl": "Probleem met meerdere kaarten oplossen",
+                "fr": "Correction d'un problème de carte multiple",
+                "it": "Risolto il problema con la mappa multipla",
+                "es": "Solucionar problema de múltiples mapas",
+                "pl": "Napraw problem z wieloma mapami",
+                "zh-cn": "修复多映射问题"
+            },
             "0.0.6": {
                 "en": "fix event storm issue",
                 "de": "Fix Event Storm Problem",
