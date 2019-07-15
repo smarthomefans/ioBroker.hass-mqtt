@@ -52,7 +52,7 @@ export class HaSwitch extends Domain {
                 common: {
                     role: "info.status",
                     name: "state",
-                    type: "string",
+                    type: "boolean",
                     desc: "Current state",
                     read: true,
                     write: false,
