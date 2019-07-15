@@ -41,7 +41,7 @@ class HaSwitch extends domain_1.Domain {
             state: {
                 type: "state",
                 common: {
-                    role: "info.status",
+                    role: "state",
                     name: "state",
                     type: "boolean",
                     desc: "Current state",
