@@ -130,6 +130,7 @@
         "extIcon": "https://raw.githubusercontent.com/smarthomefans/ioBroker.hass-mqtt/master/admin/hass-mqtt.png",
         "readme": "https://github.com/smarthomefans/ioBroker.hass-mqtt/blob/master/README.md",
         "loglevel": "info",
+        "tier": 2,
         "mode": "daemon",
         "type": "iot-systems",
         "compact": true,
