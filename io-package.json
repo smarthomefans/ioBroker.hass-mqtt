@@ -124,7 +124,6 @@
         ],
         "license": "MIT",
         "platform": "Javascript/Node.js",
-        "main": "build/main.js",
         "icon": "hass-mqtt.png",
         "enabled": true,
         "extIcon": "https://raw.githubusercontent.com/smarthomefans/ioBroker.hass-mqtt/master/admin/hass-mqtt.png",
