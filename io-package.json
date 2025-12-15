@@ -88,7 +88,6 @@
                 "zh-cn": "首次出版"
             }
         },
-        "title": "hass-mqtt",
         "titleLang": {
             "en": "hass-mqtt",
             "de": "hass-mqtt",
