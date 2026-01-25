@@ -9,6 +9,7 @@
   "homepage": "https://github.com/smarthomefans/ioBroker.hass-mqtt",
   "license": "MIT",
   "keywords": [
+    "ioBroker",
     "mqtt",
     "hass",
     "homeassistant",
