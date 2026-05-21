@@ -87,6 +87,10 @@ Confinguration like this
 ![](doc/img/zh-cn/broker_mqtt.png)
 
 ## Changelog
+
+### **WORK IN PROGRESS**
+- (ioBroker-Bot) Adapter requires js-controller >= 6.0.11 now.
+
 ### 0.0.7 (2019-06-16)
 * Fix multi map issue
 
