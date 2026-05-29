@@ -1,177 +1,179 @@
 {
-    "common": {
-        "name": "hass-mqtt",
-        "version": "0.0.7",
-        "news": {
-            "0.0.7": {
-                "en": "Fix multi map issue",
-                "de": "Behebung eines Problems mit mehreren Karten",
-                "ru": "Исправить проблему с несколькими картами",
-                "pt": "Corrigir problema de vários mapas",
-                "nl": "Probleem met meerdere kaarten oplossen",
-                "fr": "Correction d'un problème de carte multiple",
-                "it": "Risolto il problema con la mappa multipla",
-                "es": "Solucionar problema de múltiples mapas",
-                "pl": "Napraw problem z wieloma mapami",
-                "zh-cn": "修复多映射问题"
-            },
-            "0.0.6": {
-                "en": "fix event storm issue",
-                "de": "Fix Event Storm Problem",
-                "ru": "исправить проблему шторма",
-                "pt": "corrija a questão da tempestade de eventos",
-                "nl": "fix event storm probleem",
-                "fr": "correction d'un problème de tempête",
-                "it": "risolvere il problema della tempesta di eventi",
-                "es": "arreglar el problema tormenta de eventos",
-                "pl": "napraw problem z burzą zdarzeń",
-                "zh-cn": "修复事件风暴问题"
-            },
-            "0.0.5": {
-                "en": "update npm",
-                "de": "update npm",
-                "ru": "обновить нпм",
-                "pt": "atualizar npm",
-                "nl": "update npm",
-                "fr": "mettre à jour npm",
-                "it": "aggiornare npm",
-                "es": "actualizar npm",
-                "pl": "zaktualizuj npm",
-                "zh-cn": "更新npm"
-            },
-            "0.0.4": {
-                "en": "select mqtt instance, not type it name",
-                "de": "Wählen Sie die mqtt-Instanz aus, und geben Sie keinen Namen ein",
-                "ru": "выберите экземпляр mqtt, а не введите его имя",
-                "pt": "selecione mqtt instance, não digite seu nome",
-                "nl": "selecteer mqtt instance, typ de naam niet",
-                "fr": "sélectionnez l'instance mqtt, ne tapez pas le nom",
-                "it": "selezionare istanza mqtt, non digitare il nome",
-                "es": "seleccione la instancia mqtt, no escriba su nombre",
-                "pl": "wybierz instancję mqtt, a nie wpisz jej nazwę",
-                "zh-cn": "选择mqtt实例，而不是键入它的名称"
-            },
-            "0.0.3": {
-                "en": "Update admin page",
-                "de": "Aktualisieren Sie die Admin-Seite",
-                "ru": "Обновить страницу администратора",
-                "pt": "Atualizar a página de administração",
-                "nl": "Update beheerderspagina",
-                "fr": "Mettre à jour la page d'administration",
-                "it": "Aggiorna la pagina di amministrazione",
-                "es": "Actualizar la página de administrador",
-                "pl": "Aktualizacja strony administracyjnej",
-                "zh-cn": "更新管理页面"
-            },
-            "0.0.2": {
-                "en": "Add switch device support",
-                "de": "Unterstützung für Switch-Geräte hinzufügen",
-                "ru": "Добавить поддержку устройства коммутатора",
-                "pt": "Adicionar suporte ao dispositivo de chave",
-                "nl": "Ondersteuning voor schakelapparaten toevoegen",
-                "fr": "Ajouter un support de périphérique de commutation",
-                "it": "Aggiungi il supporto per il dispositivo di commutazione",
-                "es": "Añadir soporte de dispositivo de conmutación",
-                "pl": "Dodaj obsługę urządzenia przełączającego",
-                "zh-cn": "添加开关设备支持"
-            },
-            "0.0.1": {
-                "en": "initial release",
-                "de": "Erstveröffentlichung",
-                "ru": "Начальная версия",
-                "pt": "lançamento inicial",
-                "nl": "Eerste uitgave",
-                "fr": "Première version",
-                "it": "Versione iniziale",
-                "es": "Versión inicial",
-                "pl": "Pierwsze wydanie",
-                "zh-cn": "首次出版"
-            }
-        },
-        "title": "hass-mqtt",
-        "titleLang": {
-            "en": "hass-mqtt",
-            "de": "hass-mqtt",
-            "ru": "Хасс-MQTT",
-            "pt": "hass-mqtt",
-            "nl": "hass-mqtt",
-            "fr": "hass-mqtt",
-            "it": "Hass-MQTT",
-            "es": "hass-mqtt",
-            "pl": "hass-mqtt",
-            "zh-cn": "HASS-MQTT"
-        },
-        "desc": {
-            "en": "This adapter can discover devices followed hass mqtt discover protocol",
-            "de": "Dieser Adapter kann Geräte erkennen, denen das Protokoll mqtt discover folgt",
-            "ru": "Этот адаптер может обнаруживать устройства в соответствии с протоколом hass mqtt Discover",
-            "pt": "Este adaptador pode descobrir dispositivos seguidos pelo método hass mqtt discover",
-            "nl": "Deze adapter kan zoeken naar apparaten gevolgd hass mqtt discover-protocol",
-            "fr": "Cet adaptateur peut détecter les périphériques suivis par le protocole de découverte hass mqtt",
-            "it": "Questo adattatore può scoprire i dispositivi seguiti dal protocollo di rilevamento mqtt di hass",
-            "es": "Este adaptador puede descubrir dispositivos seguidos hass mqtt descubrir protocolo",
-            "pl": "Ten adapter może wykrywać urządzenia po protokole wykrywania hass mqtt",
-            "zh-cn": "该适配器可以发现遵循hass mqtt discover协议的设备"
-        },
-        "authors": [
-            "SchumyHao <schumyhaojl@126.com>"
-        ],
-        "keywords": [
-            "mqtt",
-            "hass",
-            "homeassistant",
-            "discover"
-        ],
-        "license": "MIT",
-        "platform": "Javascript/Node.js",
-        "main": "build/main.js",
-        "icon": "hass-mqtt.png",
-        "enabled": true,
-        "extIcon": "https://raw.githubusercontent.com/smarthomefans/ioBroker.hass-mqtt/master/admin/hass-mqtt.png",
-        "readme": "https://github.com/smarthomefans/ioBroker.hass-mqtt/blob/master/README.md",
-        "loglevel": "info",
-        "mode": "daemon",
-        "type": "iot-systems",
-        "compact": true,
-        "materialize": true,
-        "dependencies": [
-            {
-                "admin": ">=3.0.0"
-            },
-            {
-                "js-controller": ">=1.4.2"
-            },
-            {
-                "mqtt": ">=2.1.0"
-            }
-        ]
+  "common": {
+    "name": "hass-mqtt",
+    "version": "0.0.7",
+    "news": {
+      "0.0.7": {
+        "en": "Fix multi map issue",
+        "de": "Behebung eines Problems mit mehreren Karten",
+        "ru": "Исправить проблему с несколькими картами",
+        "pt": "Corrigir problema de vários mapas",
+        "nl": "Probleem met meerdere kaarten oplossen",
+        "fr": "Correction d'un problème de carte multiple",
+        "it": "Risolto il problema con la mappa multipla",
+        "es": "Solucionar problema de múltiples mapas",
+        "pl": "Napraw problem z wieloma mapami",
+        "zh-cn": "修复多映射问题"
+      },
+      "0.0.6": {
+        "en": "fix event storm issue",
+        "de": "Fix Event Storm Problem",
+        "ru": "исправить проблему шторма",
+        "pt": "corrija a questão da tempestade de eventos",
+        "nl": "fix event storm probleem",
+        "fr": "correction d'un problème de tempête",
+        "it": "risolvere il problema della tempesta di eventi",
+        "es": "arreglar el problema tormenta de eventos",
+        "pl": "napraw problem z burzą zdarzeń",
+        "zh-cn": "修复事件风暴问题"
+      },
+      "0.0.5": {
+        "en": "update npm",
+        "de": "update npm",
+        "ru": "обновить нпм",
+        "pt": "atualizar npm",
+        "nl": "update npm",
+        "fr": "mettre à jour npm",
+        "it": "aggiornare npm",
+        "es": "actualizar npm",
+        "pl": "zaktualizuj npm",
+        "zh-cn": "更新npm"
+      },
+      "0.0.4": {
+        "en": "select mqtt instance, not type it name",
+        "de": "Wählen Sie die mqtt-Instanz aus, und geben Sie keinen Namen ein",
+        "ru": "выберите экземпляр mqtt, а не введите его имя",
+        "pt": "selecione mqtt instance, não digite seu nome",
+        "nl": "selecteer mqtt instance, typ de naam niet",
+        "fr": "sélectionnez l'instance mqtt, ne tapez pas le nom",
+        "it": "selezionare istanza mqtt, non digitare il nome",
+        "es": "seleccione la instancia mqtt, no escriba su nombre",
+        "pl": "wybierz instancję mqtt, a nie wpisz jej nazwę",
+        "zh-cn": "选择mqtt实例，而不是键入它的名称"
+      },
+      "0.0.3": {
+        "en": "Update admin page",
+        "de": "Aktualisieren Sie die Admin-Seite",
+        "ru": "Обновить страницу администратора",
+        "pt": "Atualizar a página de administração",
+        "nl": "Update beheerderspagina",
+        "fr": "Mettre à jour la page d'administration",
+        "it": "Aggiorna la pagina di amministrazione",
+        "es": "Actualizar la página de administrador",
+        "pl": "Aktualizacja strony administracyjnej",
+        "zh-cn": "更新管理页面"
+      },
+      "0.0.2": {
+        "en": "Add switch device support",
+        "de": "Unterstützung für Switch-Geräte hinzufügen",
+        "ru": "Добавить поддержку устройства коммутатора",
+        "pt": "Adicionar suporte ao dispositivo de chave",
+        "nl": "Ondersteuning voor schakelapparaten toevoegen",
+        "fr": "Ajouter un support de périphérique de commutation",
+        "it": "Aggiungi il supporto per il dispositivo di commutazione",
+        "es": "Añadir soporte de dispositivo de conmutación",
+        "pl": "Dodaj obsługę urządzenia przełączającego",
+        "zh-cn": "添加开关设备支持"
+      },
+      "0.0.1": {
+        "en": "initial release",
+        "de": "Erstveröffentlichung",
+        "ru": "Начальная версия",
+        "pt": "lançamento inicial",
+        "nl": "Eerste uitgave",
+        "fr": "Première version",
+        "it": "Versione iniziale",
+        "es": "Versión inicial",
+        "pl": "Pierwsze wydanie",
+        "zh-cn": "首次出版"
+      }
     },
-    "native": {
-        "mqttClientInstanceID": "",
-        "hassPrefix": "homeassistant"
+    "title": "hass-mqtt",
+    "titleLang": {
+      "en": "hass-mqtt",
+      "de": "hass-mqtt",
+      "ru": "Хасс-MQTT",
+      "pt": "hass-mqtt",
+      "nl": "hass-mqtt",
+      "fr": "hass-mqtt",
+      "it": "Hass-MQTT",
+      "es": "hass-mqtt",
+      "pl": "hass-mqtt",
+      "zh-cn": "HASS-MQTT"
     },
-    "objects": [],
-    "instanceObjects": [
-        {
-            "_id": "info",
-            "type": "channel",
-            "common": {
-                "name": "Information"
-            },
-            "native": {}
-        },
-        {
-            "_id": "info.connection",
-            "type": "state",
-            "common": {
-                "role": "indicator.connected",
-                "name": "Device or service connected",
-                "type": "boolean",
-                "read": true,
-                "write": false,
-                "def": false
-            },
-            "native": {}
-        }
-    ]
+    "desc": {
+      "en": "This adapter can discover devices followed hass mqtt discover protocol",
+      "de": "Dieser Adapter kann Geräte erkennen, denen das Protokoll mqtt discover folgt",
+      "ru": "Этот адаптер может обнаруживать устройства в соответствии с протоколом hass mqtt Discover",
+      "pt": "Este adaptador pode descobrir dispositivos seguidos pelo método hass mqtt discover",
+      "nl": "Deze adapter kan zoeken naar apparaten gevolgd hass mqtt discover-protocol",
+      "fr": "Cet adaptateur peut détecter les périphériques suivis par le protocole de découverte hass mqtt",
+      "it": "Questo adattatore può scoprire i dispositivi seguiti dal protocollo di rilevamento mqtt di hass",
+      "es": "Este adaptador puede descubrir dispositivos seguidos hass mqtt descubrir protocolo",
+      "pl": "Ten adapter może wykrywać urządzenia po protokole wykrywania hass mqtt",
+      "zh-cn": "该适配器可以发现遵循hass mqtt discover协议的设备"
+    },
+    "authors": [
+      "SchumyHao <schumyhaojl@126.com>"
+    ],
+    "keywords": [
+      "mqtt",
+      "hass",
+      "homeassistant",
+      "discover"
+    ],
+    "license": "MIT",
+    "platform": "Javascript/Node.js",
+    "main": "build/main.js",
+    "icon": "hass-mqtt.png",
+    "enabled": true,
+    "extIcon": "https://raw.githubusercontent.com/smarthomefans/ioBroker.hass-mqtt/master/admin/hass-mqtt.png",
+    "readme": "https://github.com/smarthomefans/ioBroker.hass-mqtt/blob/master/README.md",
+    "loglevel": "info",
+    "mode": "daemon",
+    "type": "iot-systems",
+    "compact": true,
+    "dependencies": [
+      {
+        "admin": ">=3.0.0"
+      },
+      {
+        "js-controller": ">=6.0.11"
+      },
+      {
+        "mqtt": ">=2.1.0"
+      }
+    ],
+    "adminUI": {
+      "config": "materialize"
+    }
+  },
+  "native": {
+    "mqttClientInstanceID": "",
+    "hassPrefix": "homeassistant"
+  },
+  "objects": [],
+  "instanceObjects": [
+    {
+      "_id": "info",
+      "type": "channel",
+      "common": {
+        "name": "Information"
+      },
+      "native": {}
+    },
+    {
+      "_id": "info.connection",
+      "type": "state",
+      "common": {
+        "role": "indicator.connected",
+        "name": "Device or service connected",
+        "type": "boolean",
+        "read": true,
+        "write": false,
+        "def": false
+      },
+      "native": {}
+    }
+  ]
 }
